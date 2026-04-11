@@ -1,0 +1,1980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 2002 – Chapters 12 & 13: Quantifying Uncertainty & Probabilistic Reasoning</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --navy:   #0d1b2a;
+    --slate:  #1b2d45;
+    --teal:   #0f7b72;
+    --gold:   #c9933a;
+    --cream:  #f5f0e8;
+    --paper:  #faf8f3;
+    --text:   #1a1a1a;
+    --muted:  #5a6070;
+    --border: #d4cfc4;
+    --code-bg:#1e2d3d;
+    --accent: #e84c4c;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Source Serif 4', Georgia, serif;
+    background: var(--paper);
+    color: var(--text);
+    font-size: 17px;
+    line-height: 1.85;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    background: var(--navy);
+    color: #fff;
+    padding: 64px 48px 56px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 70% 30%, rgba(15,123,114,.35) 0%, transparent 65%);
+  }
+  .hero-inner { position: relative; max-width: 900px; margin: 0 auto; }
+  .hero-tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+    background: var(--teal); color: #fff;
+    padding: 4px 12px; border-radius: 2px; margin-bottom: 18px;
+  }
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 4vw, 48px);
+    font-weight: 900; line-height: 1.15;
+    margin-bottom: 16px;
+  }
+  .hero h1 span { color: var(--gold); }
+  .hero p { font-size: 15px; color: rgba(255,255,255,.72); max-width: 620px; line-height: 1.7; }
+  .hero-meta { margin-top: 28px; display: flex; gap: 32px; flex-wrap: wrap; }
+  .hero-meta span {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    color: rgba(255,255,255,.55); letter-spacing: .06em;
+  }
+  .hero-meta strong { color: var(--gold); }
+
+  /* ── LAYOUT ── */
+  .wrapper { max-width: 940px; margin: 0 auto; padding: 0 28px 80px; }
+
+  /* ── TOC ── */
+  .toc-card {
+    background: var(--slate); color: #fff;
+    border-radius: 4px; padding: 32px 36px; margin: 44px 0;
+  }
+  .toc-card h2 {
+    font-family: 'Playfair Display', serif; font-size: 20px;
+    margin-bottom: 20px; color: var(--gold);
+  }
+  .toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 32px; }
+  .toc-item {
+    font-family: 'JetBrains Mono', monospace; font-size: 12.5px;
+    color: rgba(255,255,255,.75); padding: 5px 0;
+    border-bottom: 1px solid rgba(255,255,255,.1);
+    text-decoration: none; transition: color .2s;
+    display: flex; align-items: baseline; gap: 8px;
+  }
+  .toc-item:hover { color: var(--gold); }
+  .toc-num { color: var(--teal); font-weight: 600; min-width: 28px; }
+
+  /* ── CHAPTER DIVIDER ── */
+  .chapter-divider {
+    background: var(--navy); color: #fff;
+    padding: 28px 36px; border-radius: 4px;
+    margin: 56px 0 36px;
+    border-left: 5px solid var(--gold);
+    display: flex; align-items: center; gap: 20px;
+  }
+  .chapter-num {
+    font-family: 'Playfair Display', serif; font-size: 52px;
+    font-weight: 900; color: var(--gold); line-height: 1; opacity: .85;
+    min-width: 60px;
+  }
+  .chapter-info h2 {
+    font-family: 'Playfair Display', serif; font-size: 24px; margin-bottom: 4px;
+  }
+  .chapter-info p { font-size: 13px; color: rgba(255,255,255,.6); line-height: 1.5; }
+
+  /* ── SECTION HEADERS ── */
+  h2.section-title {
+    font-family: 'Playfair Display', serif; font-size: 26px;
+    font-weight: 700; color: var(--navy);
+    margin: 52px 0 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--teal);
+  }
+  h3.sub-title {
+    font-family: 'Playfair Display', serif; font-size: 20px;
+    font-weight: 700; color: var(--slate);
+    margin: 36px 0 14px;
+    padding-left: 14px;
+    border-left: 3px solid var(--gold);
+  }
+  h4.micro-title {
+    font-family: 'Source Serif 4', serif; font-size: 16px;
+    font-weight: 600; color: var(--teal);
+    margin: 26px 0 10px; text-transform: uppercase;
+    letter-spacing: .06em; font-size: 13px;
+  }
+
+  /* ── PROSE ── */
+  p { margin-bottom: 16px; }
+  p + p { text-indent: 0; }
+
+  /* ── DEFINITION BOX ── */
+  .def-box {
+    background: #eef7f6; border-left: 4px solid var(--teal);
+    padding: 18px 22px; border-radius: 0 4px 4px 0;
+    margin: 22px 0;
+  }
+  .def-box .def-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    text-transform: uppercase; letter-spacing: .14em;
+    color: var(--teal); margin-bottom: 6px; font-weight: 600;
+  }
+  .def-box p { margin: 0; font-size: 16px; }
+
+  /* ── KEY FORMULA ── */
+  .formula-box {
+    background: var(--code-bg); color: #e2e8f0;
+    border-radius: 6px; padding: 20px 26px; margin: 20px 0;
+    font-family: 'JetBrains Mono', monospace; font-size: 15px;
+    line-height: 1.9; overflow-x: auto;
+  }
+  .formula-box .label {
+    font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--teal); margin-bottom: 10px; display: block;
+  }
+  .formula-box .hi { color: var(--gold); }
+  .formula-box .comment { color: #64748b; font-size: 13px; }
+
+  /* ── EXAMPLE BOX ── */
+  .example-box {
+    border: 1.5px solid var(--border);
+    border-top: 4px solid var(--gold);
+    border-radius: 4px; padding: 22px 26px; margin: 26px 0;
+    background: #fffef9;
+  }
+  .example-box .ex-title {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    text-transform: uppercase; letter-spacing: .15em;
+    color: var(--gold); margin-bottom: 12px; font-weight: 700;
+  }
+  .example-box h4 { font-size: 15px; font-weight: 600; margin-bottom: 10px; color: var(--slate); }
+
+  /* ── TABLES ── */
+  .table-wrap { overflow-x: auto; margin: 20px 0; }
+  table {
+    border-collapse: collapse; width: 100%; font-size: 14.5px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  th {
+    background: var(--navy); color: #fff;
+    padding: 9px 14px; text-align: left; font-weight: 600;
+    font-size: 12px; letter-spacing: .06em;
+  }
+  td { padding: 8px 14px; border-bottom: 1px solid var(--border); }
+  tr:nth-child(even) td { background: #f5f1eb; }
+  tr:hover td { background: #e9f5f4; }
+
+  /* ── DIAGRAM / SVG AREA ── */
+  .diagram-area {
+    background: #f0f4f8; border: 1px solid var(--border);
+    border-radius: 6px; padding: 24px; margin: 24px 0;
+    text-align: center;
+  }
+  .diagram-area svg { max-width: 100%; height: auto; }
+
+  /* ── CALLOUT ── */
+  .callout {
+    background: #fff4e5; border: 1px solid #f0c070;
+    border-left: 4px solid var(--gold);
+    padding: 16px 20px; border-radius: 0 4px 4px 0; margin: 20px 0;
+    font-size: 15.5px;
+  }
+  .callout-warn {
+    background: #fff0f0; border-left-color: var(--accent);
+    border-color: #f0b0b0;
+  }
+  .callout-teal {
+    background: #e8f6f5; border-left-color: var(--teal);
+    border-color: #a0dbd6;
+  }
+  .callout strong { color: var(--navy); }
+
+  /* ── STEPS ── */
+  .steps { counter-reset: step-ctr; margin: 16px 0; }
+  .step {
+    display: flex; gap: 16px; margin-bottom: 14px; align-items: flex-start;
+  }
+  .step-num {
+    counter-increment: step-ctr;
+    min-width: 32px; height: 32px;
+    background: var(--teal); color: #fff;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 13px;
+    flex-shrink: 0; margin-top: 2px;
+  }
+  .step-body { font-size: 15.5px; }
+  .step-body strong { color: var(--slate); }
+
+  /* ── NOTE TAG ── */
+  .note-tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    background: var(--navy); color: var(--gold);
+    padding: 2px 8px; border-radius: 2px; margin-right: 6px;
+    text-transform: uppercase; letter-spacing: .1em;
+  }
+
+  /* ── KEY INSIGHT ── */
+  .key-insight {
+    background: var(--navy); color: #fff;
+    padding: 20px 26px; border-radius: 4px; margin: 28px 0;
+    font-size: 16px; font-style: italic; line-height: 1.7;
+  }
+  .key-insight::before { content: '💡 '; }
+
+  /* ── COMPLEXITY TABLE ── */
+  .complexity-row { display: flex; gap: 0; margin: 4px 0; }
+  .complexity-label {
+    background: var(--slate); color: #fff;
+    padding: 7px 14px; font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; min-width: 220px;
+  }
+  .complexity-val {
+    background: #eef7f6; padding: 7px 14px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: var(--teal); flex: 1;
+  }
+
+  /* ── NAV BAR ── */
+  .top-nav {
+    background: var(--slate); position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; gap: 0; overflow-x: auto;
+    border-bottom: 2px solid var(--teal);
+  }
+  .top-nav a {
+    padding: 11px 18px; font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; text-transform: uppercase; letter-spacing: .1em;
+    color: rgba(255,255,255,.65); text-decoration: none;
+    border-right: 1px solid rgba(255,255,255,.1);
+    white-space: nowrap; transition: all .2s;
+  }
+  .top-nav a:hover { background: rgba(15,123,114,.4); color: #fff; }
+
+  /* ── RESPONSIVE ── */
+  @media(max-width:640px){
+    .hero { padding: 40px 20px; }
+    .wrapper { padding: 0 16px 60px; }
+    .toc-grid { grid-template-columns: 1fr; }
+    .chapter-num { font-size: 36px; min-width: 44px; }
+    .hero h1 { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ NAV ══════════════ -->
+<nav class="top-nav">
+  <a href="#ch12">Ch 12 Intro</a>
+  <a href="#prob-notation">Probability Basics</a>
+  <a href="#inference">Inference</a>
+  <a href="#independence">Independence</a>
+  <a href="#bayes">Bayes' Rule</a>
+  <a href="#naive-bayes">Naive Bayes</a>
+  <a href="#ch13">Ch 13 Intro</a>
+  <a href="#bn-semantics">BN Semantics</a>
+  <a href="#exact">Exact Inference</a>
+  <a href="#approx">Approx Inference</a>
+  <a href="#causal">Causal Nets</a>
+  <a href="#dsep">D-Separation</a>
+</nav>
+
+<!-- ══════════════ HERO ══════════════ -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-tag">AI 2002 · Spring 2026</div>
+    <h1>Chapters 12 &amp; 13<br><span>Quantifying Uncertainty &amp;</span><br><span>Probabilistic Reasoning</span></h1>
+    <p>A complete, in-depth study guide covering every concept, rule, theorem, and worked example from the textbook <em>Artificial Intelligence: A Modern Approach</em> and all slide notes — with clear diagrams, step-by-step solutions, and detailed explanations.</p>
+    <div class="hero-meta">
+      <span><strong>Book:</strong> AIMA 4th Ed. Chapters 12–13</span>
+      <span><strong>Topics:</strong> Probability · Bayes Nets · Inference · Sampling</span>
+      <span><strong>Slides:</strong> Ch12_13 &amp; Ch13 Contd.</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ TOC ══════════════ -->
+<div class="wrapper">
+<div class="toc-card">
+  <h2>Table of Contents</h2>
+  <div class="toc-grid">
+    <a class="toc-item" href="#ch12"><span class="toc-num">1</span>Chapter 12 Overview</a>
+    <a class="toc-item" href="#acting"><span class="toc-num">2</span>Acting Under Uncertainty</a>
+    <a class="toc-item" href="#prob-notation"><span class="toc-num">3</span>Basic Probability Notation</a>
+    <a class="toc-item" href="#random-vars"><span class="toc-num">4</span>Random Variables &amp; Distributions</a>
+    <a class="toc-item" href="#joint"><span class="toc-num">5</span>Joint Distributions</a>
+    <a class="toc-item" href="#inference"><span class="toc-num">6</span>Inference Using Full Joint</a>
+    <a class="toc-item" href="#marginal"><span class="toc-num">7</span>Marginalization &amp; Normalization</a>
+    <a class="toc-item" href="#conditional"><span class="toc-num">8</span>Conditional Probability</a>
+    <a class="toc-item" href="#independence"><span class="toc-num">9</span>Independence</a>
+    <a class="toc-item" href="#bayes"><span class="toc-num">10</span>Bayes' Rule &amp; Applications</a>
+    <a class="toc-item" href="#conditional-ind"><span class="toc-num">11</span>Conditional Independence</a>
+    <a class="toc-item" href="#naive-bayes"><span class="toc-num">12</span>Naive Bayes Model</a>
+    <a class="toc-item" href="#wumpus"><span class="toc-num">13</span>Wumpus World Revisited</a>
+    <a class="toc-item" href="#ch13"><span class="toc-num">14</span>Chapter 13 Overview</a>
+    <a class="toc-item" href="#bn-represent"><span class="toc-num">15</span>Bayesian Network Representation</a>
+    <a class="toc-item" href="#bn-semantics"><span class="toc-num">16</span>Semantics of Bayes Nets</a>
+    <a class="toc-item" href="#cpt-compact"><span class="toc-num">17</span>Compact CPT Representations</a>
+    <a class="toc-item" href="#exact"><span class="toc-num">18</span>Exact Inference (VE)</a>
+    <a class="toc-item" href="#approx"><span class="toc-num">19</span>Approximate Inference / MCMC</a>
+    <a class="toc-item" href="#dsep"><span class="toc-num">20</span>D-Separation &amp; Independence</a>
+    <a class="toc-item" href="#causal"><span class="toc-num">21</span>Causal Networks</a>
+    <a class="toc-item" href="#slides-extra"><span class="toc-num">22</span>Slides Extra Examples</a>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     CHAPTER 12
+══════════════════════════════════════════════════ -->
+<div id="ch12" class="chapter-divider">
+  <div class="chapter-num">12</div>
+  <div class="chapter-info">
+    <h2>Quantifying Uncertainty</h2>
+    <p>How AI agents deal with partial observability, nondeterminism, and incomplete knowledge using the mathematical language of probability theory.</p>
+  </div>
+</div>
+
+<!-- ───── 12.1 Acting Under Uncertainty ───── -->
+<h2 id="acting" class="section-title">12.1 Acting Under Uncertainty</h2>
+
+<p>In the real world, agents almost never have complete knowledge of their environment. They face <strong>uncertainty</strong> due to three main sources:</p>
+
+<div class="steps">
+  <div class="step"><div class="step-num"></div><div class="step-body"><strong>Partial Observability:</strong> The agent's sensors don't reveal the full state of the world. A robot may not see around corners; a doctor can't directly inspect a patient's bloodstream.</div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body"><strong>Nondeterminism:</strong> Even knowing the full state, actions may have multiple possible outcomes. Flipping a switch might not always work.</div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body"><strong>Adversaries:</strong> Other agents in the environment may act in unpredictable or adversarial ways.</div></div>
+</div>
+
+<h3 class="sub-title">12.1.1 Why Logic Fails — The Summarizing Uncertainty Problem</h3>
+
+<p>Consider a dental diagnosis system. A logical agent might write:</p>
+<div class="formula-box">
+  <span class="label">Logical Rule (Broken)</span>
+  Toothache ⇒ Cavity
+  <span class="comment">// Wrong! Not all toothaches are from cavities</span>
+
+  Cavity ⇒ Toothache
+  <span class="comment">// Wrong! Not all cavities cause pain</span>
+</div>
+
+<p>Logic fails here for three fundamental reasons, which the book calls:</p>
+
+<div class="table-wrap"><table>
+  <tr><th>Reason</th><th>What It Means</th><th>Example</th></tr>
+  <tr><td>Laziness</td><td>Writing truly exhaustive rules is impractical</td><td>Too many exceptions to toothache rules</td></tr>
+  <tr><td>Theoretical Ignorance</td><td>Science doesn't have a complete theory</td><td>No complete dental theory exists</td></tr>
+  <tr><td>Practical Ignorance</td><td>Even with all rules, specific data may be missing</td><td>Patient hasn't had all tests done</td></tr>
+</table></div>
+
+<p>The solution: instead of true/false, assign a <strong>degree of belief</strong> — a number between 0 and 1 that represents how confident we are. This is what probability theory provides.</p>
+
+<div class="callout-teal callout">
+  <strong>Key Insight:</strong> Probability statements are about <em>knowledge states</em>, not the world itself. "P(cavity | toothache) = 0.8" means: given that we currently know about a toothache and nothing else, 80% of such situations result in a cavity. The probability changes as we learn more.
+</div>
+
+<h3 class="sub-title">12.1.2 Uncertainty and Rational Decisions</h3>
+
+<p>Knowing probabilities alone isn't enough — an agent also needs to know what outcomes are <em>desirable</em>. This gives us:</p>
+
+<div class="formula-box">
+  <span class="label">Decision Theory</span>
+  <span class="hi">Decision Theory = Probability Theory + Utility Theory</span>
+
+  <span class="comment">-- Probability: how likely is each outcome?</span>
+  <span class="comment">-- Utility: how good/bad is each outcome?</span>
+  <span class="comment">-- Rational agent: choose action with maximum EXPECTED utility</span>
+</div>
+
+<div class="example-box">
+  <div class="ex-title">Example — The Airport Problem</div>
+  <h4>Scenario</h4>
+  <p>An automated taxi must get a passenger to the airport on time. Three plans:</p>
+  <div class="table-wrap"><table>
+    <tr><th>Plan</th><th>Leave Time</th><th>P(on time)</th><th>Downside</th></tr>
+    <tr><td>A₉₀</td><td>90 min before</td><td>97%</td><td>Reasonable</td></tr>
+    <tr><td>A₁₈₀</td><td>180 min before</td><td>99.5%</td><td>Long airport wait</td></tr>
+    <tr><td>A₁₄₄₀</td><td>24 hrs before</td><td>≈100%</td><td>Intolerable wait</td></tr>
+  </table></div>
+  <p><strong>A₉₀ is typically rational</strong> because it balances the probability of success against the cost (long wait, missed meals). The right choice depends on both probability AND utility of outcomes.</p>
+</div>
+
+<div class="def-box">
+  <div class="def-label">Principle of Maximum Expected Utility (MEU)</div>
+  <p>A rational agent chooses the action that yields the <strong>highest expected utility</strong>, averaged over all possible outcomes of the action — weighted by their probabilities.</p>
+</div>
+
+<!-- ───── 12.2 Basic Probability Notation ───── -->
+<h2 id="prob-notation" class="section-title">12.2 Basic Probability Notation</h2>
+
+<h3 id="random-vars" class="sub-title">Random Variables</h3>
+
+<p>A <strong>random variable</strong> is any aspect of the world about which we have uncertainty. In probability theory, they are written with capital letters and have a <strong>domain</strong> (the set of values they can take).</p>
+
+<div class="table-wrap"><table>
+  <tr><th>Variable</th><th>Domain / Possible Values</th><th>Example</th></tr>
+  <tr><td>Weather</td><td>{sun, rain, fog, meteor}</td><td>Is it raining?</td></tr>
+  <tr><td>Temperature</td><td>{hot, cold}</td><td>Is it hot outside?</td></tr>
+  <tr><td>Cavity</td><td>{true, false}</td><td>Does patient have cavity?</td></tr>
+  <tr><td>Die1</td><td>{1, 2, 3, 4, 5, 6}</td><td>Value of first die roll</td></tr>
+</table></div>
+
+<div class="callout callout-teal">
+  <strong>Convention:</strong> Random variables → UPPERCASE (Cavity). Their specific values → lowercase (cavity, ¬cavity). Boolean variable "Cavity = true" is often just written as "cavity".
+</div>
+
+<h3 class="sub-title">Probability Distributions</h3>
+
+<p>A <strong>probability distribution</strong> assigns a probability to each value in a variable's domain. These must satisfy two requirements:</p>
+
+<div class="formula-box">
+  <span class="label">Axioms of Probability</span>
+  <span class="hi">0 ≤ P(ω) ≤ 1</span>    for every possible world ω
+
+  <span class="hi">Σ P(ω) = 1</span>        all probabilities sum to 1
+</div>
+
+<div class="example-box">
+  <div class="ex-title">Example — Weather Distribution</div>
+  <p>The full distribution for Weather is written as a vector:</p>
+  <div class="table-wrap"><table>
+    <tr><th>W</th><th>P</th></tr>
+    <tr><td>sun</td><td>0.6</td></tr>
+    <tr><td>rain</td><td>0.1</td></tr>
+    <tr><td>fog</td><td>0.3</td></tr>
+    <tr><td>meteor</td><td>0.0</td></tr>
+  </table></div>
+  <p><strong>Check:</strong> 0.6 + 0.1 + 0.3 + 0.0 = 1.0 ✓</p>
+  <p>In bold-vector shorthand: <code>P(Weather) = ⟨0.6, 0.1, 0.3, 0.0⟩</code></p>
+</div>
+
+<h3 class="sub-title">Prior vs. Posterior (Conditional) Probability</h3>
+
+<p>There are two types of probabilities:</p>
+
+<div class="table-wrap"><table>
+  <tr><th>Type</th><th>Notation</th><th>Meaning</th></tr>
+  <tr><td><strong>Prior / Unconditional</strong></td><td>P(cavity) = 0.2</td><td>Probability before observing any evidence</td></tr>
+  <tr><td><strong>Posterior / Conditional</strong></td><td>P(cavity | toothache) = 0.6</td><td>Probability GIVEN we know something (evidence)</td></tr>
+</table></div>
+
+<!-- ───── Joint Distributions ───── -->
+<h2 id="joint" class="section-title">Joint Probability Distributions</h2>
+
+<p>A <strong>joint distribution</strong> specifies a probability for every possible combination of values of multiple variables. For n variables each with d values, the joint table has d^n entries.</p>
+
+<div class="example-box">
+  <div class="ex-title">Example — Joint Distribution Over T (Temperature) and W (Weather)</div>
+  <div class="table-wrap"><table>
+    <tr><th>T</th><th>W</th><th>P(T,W)</th></tr>
+    <tr><td>hot</td><td>sun</td><td>0.4</td></tr>
+    <tr><td>hot</td><td>rain</td><td>0.1</td></tr>
+    <tr><td>cold</td><td>sun</td><td>0.2</td></tr>
+    <tr><td>cold</td><td>rain</td><td>0.3</td></tr>
+  </table></div>
+  <p>Total: 0.4 + 0.1 + 0.2 + 0.3 = 1.0 ✓</p>
+  <p>This table answers ANY question about T and W — it is the "universal knowledge base" for this domain.</p>
+  <h4>Reading probabilities from this table:</h4>
+  <p><strong>P(T=hot AND W=sun)</strong> → look up row: 0.4</p>
+  <p><strong>P(T=hot)</strong> → add all rows with T=hot: 0.4 + 0.1 = 0.5</p>
+  <p><strong>P(T=hot OR W=sun)</strong> → P(hot) + P(sun) − P(hot ∧ sun) = 0.5 + 0.6 − 0.4 = 0.7</p>
+</div>
+
+<div class="callout callout-warn">
+  <strong>Scaling Problem:</strong> A joint distribution over n Boolean variables needs 2ⁿ entries. With just 30 variables: 2³⁰ ≈ 1 billion entries. Completely impractical! This is why we need smarter representations like Bayes Nets (Chapter 13).
+</div>
+
+<!-- ───── 12.3 Inference ───── -->
+<h2 id="inference" class="section-title">12.3 Inference Using Full Joint Distributions</h2>
+
+<p>Given a full joint distribution, we can answer any probabilistic query by summing up the relevant entries.</p>
+
+<div class="example-box">
+  <div class="ex-title">The Dental Example — Full Joint Distribution</div>
+  <p>Three Boolean variables: <strong>Toothache (T)</strong>, <strong>Cavity (C)</strong>, <strong>Catch (X)</strong> (dentist's probe catches in tooth).</p>
+  <div class="table-wrap"><table>
+    <tr><th></th><th colspan="2">toothache</th><th colspan="2">¬toothache</th></tr>
+    <tr><th></th><th>catch</th><th>¬catch</th><th>catch</th><th>¬catch</th></tr>
+    <tr><td><strong>cavity</strong></td><td>0.108</td><td>0.012</td><td>0.072</td><td>0.008</td></tr>
+    <tr><td><strong>¬cavity</strong></td><td>0.016</td><td>0.064</td><td>0.144</td><td>0.576</td></tr>
+  </table></div>
+  <p>Total: all 8 values sum to 1.0 ✓</p>
+  
+  <h4>Query 1: P(cavity ∨ toothache) = ?</h4>
+  <p>Identify all worlds where cavity OR toothache is true — that's all except the row ¬cavity,¬toothache:</p>
+  <p>P(cavity ∨ toothache) = 0.108 + 0.012 + 0.072 + 0.008 + 0.016 + 0.064 = <strong>0.28</strong></p>
+
+  <h4>Query 2: P(cavity) = ?</h4>
+  <p>Sum the entire cavity row (all combinations where cavity is true):</p>
+  <p>P(cavity) = 0.108 + 0.012 + 0.072 + 0.008 = <strong>0.2</strong></p>
+
+  <h4>Query 3: P(cavity | toothache) = ?</h4>
+  <p>Use conditional probability formula: P(a|b) = P(a ∧ b) / P(b)</p>
+  <p>P(toothache) = 0.108 + 0.012 + 0.016 + 0.064 = 0.2</p>
+  <p>P(cavity ∧ toothache) = 0.108 + 0.012 = 0.12</p>
+  <p>P(cavity | toothache) = 0.12 / 0.2 = <strong>0.6</strong></p>
+</div>
+
+<!-- ───── Marginalization & Normalization ───── -->
+<h2 id="marginal" class="section-title">Marginalization and Normalization Trick</h2>
+
+<h3 class="sub-title">Marginalization (Summing Out)</h3>
+
+<p><strong>Marginalization</strong> is the process of collapsing a joint distribution to a smaller one by summing out unwanted variables.</p>
+
+<div class="formula-box">
+  <span class="label">Marginalization Rule</span>
+  P(Y) = Σ_z  P(Y, Z=z)
+
+  <span class="comment">-- Sum over all values of Z to eliminate it</span>
+  <span class="comment">-- Also called "summing out" variable Z</span>
+</div>
+
+<div class="example-box">
+  <div class="ex-title">Example — Marginalizing over Weather</div>
+  <p>Starting with joint P(T, W):</p>
+  <div class="table-wrap"><table>
+    <tr><th>T</th><th>W</th><th>P</th></tr>
+    <tr><td>hot</td><td>sun</td><td>0.4</td></tr>
+    <tr><td>hot</td><td>rain</td><td>0.1</td></tr>
+    <tr><td>cold</td><td>sun</td><td>0.2</td></tr>
+    <tr><td>cold</td><td>rain</td><td>0.3</td></tr>
+  </table></div>
+  <p>To get P(T) — marginalize over W (sum out W):</p>
+  <p>P(T=hot) = P(hot,sun) + P(hot,rain) = 0.4 + 0.1 = <strong>0.5</strong></p>
+  <p>P(T=cold) = P(cold,sun) + P(cold,rain) = 0.2 + 0.3 = <strong>0.5</strong></p>
+  <p>Result: P(T) = ⟨0.5, 0.5⟩</p>
+</div>
+
+<h3 class="sub-title">The Normalization Trick</h3>
+
+<p>When computing conditional probabilities from a joint distribution, we don't always need to know P(evidence) exactly. We can:</p>
+
+<div class="steps">
+  <div class="step"><div class="step-num"></div><div class="step-body"><strong>SELECT</strong> all rows from the joint table that match the observed evidence.</div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body"><strong>NORMALIZE</strong> those selected rows so they sum to 1 (divide each by their sum Z).</div></div>
+</div>
+
+<div class="formula-box">
+  <span class="label">Normalization Procedure</span>
+  Step 1: Compute Z = sum of selected entries
+  Step 2: Divide every entry by Z
+
+  <span class="hi">P(Y | evidence) = (1/Z) × P(Y, evidence)</span>
+  <span class="comment">-- α = 1/Z is the normalization constant</span>
+</div>
+
+<div class="example-box">
+  <div class="ex-title">Example — Normalization</div>
+  <p><strong>Query:</strong> P(W | T=cold) from the joint P(T,W)</p>
+  <p><strong>Step 1: SELECT</strong> rows where T=cold:</p>
+  <div class="table-wrap"><table>
+    <tr><th>T</th><th>W</th><th>P (selected)</th></tr>
+    <tr><td>cold</td><td>sun</td><td>0.2</td></tr>
+    <tr><td>cold</td><td>rain</td><td>0.3</td></tr>
+  </table></div>
+  <p><strong>Step 2: NORMALIZE</strong> — Z = 0.2 + 0.3 = 0.5</p>
+  <p>P(W=sun | T=cold) = 0.2 / 0.5 = <strong>0.4</strong></p>
+  <p>P(W=rain | T=cold) = 0.3 / 0.5 = <strong>0.6</strong></p>
+  <p><strong>Why does this work?</strong> The sum of selected rows IS P(evidence) = P(T=cold) = 0.5. So dividing by Z is the same as dividing by P(T=cold).</p>
+</div>
+
+<!-- ───── Inference by Enumeration ───── -->
+<h3 class="sub-title">Inference by Enumeration — General Method</h3>
+
+<p>The general formula for answering any query P(X | e) from a joint distribution:</p>
+
+<div class="formula-box">
+  <span class="label">General Inference by Enumeration</span>
+  <span class="hi">P(X | e) = α Σ_y  P(X, e, y)</span>
+
+  Where:
+    X  = query variable
+    e  = evidence (observed values)
+    y  = hidden variables (not queried, not observed)
+    α  = normalization constant
+
+  Steps:
+  1. Select entries consistent with evidence e
+  2. Sum out hidden variables Y to get P(X, e)
+  3. Normalize to get P(X | e)
+</div>
+
+<div class="example-box">
+  <div class="ex-title">Detailed Example — Inference by Enumeration</div>
+  <p>Joint distribution P(S, T, W) with 3 variables: Season (S), Temperature (T), Weather (W):</p>
+  <div class="table-wrap"><table>
+    <tr><th>S</th><th>T</th><th>W</th><th>P</th></tr>
+    <tr><td>summer</td><td>hot</td><td>sun</td><td>0.30</td></tr>
+    <tr><td>summer</td><td>hot</td><td>rain</td><td>0.05</td></tr>
+    <tr><td>summer</td><td>cold</td><td>sun</td><td>0.10</td></tr>
+    <tr><td>summer</td><td>cold</td><td>rain</td><td>0.05</td></tr>
+    <tr><td>winter</td><td>hot</td><td>sun</td><td>0.10</td></tr>
+    <tr><td>winter</td><td>hot</td><td>rain</td><td>0.05</td></tr>
+    <tr><td>winter</td><td>cold</td><td>sun</td><td>0.15</td></tr>
+    <tr><td>winter</td><td>cold</td><td>rain</td><td>0.20</td></tr>
+  </table></div>
+
+  <h4>Query A: P(W) — no evidence</h4>
+  <p>Sum over all values of S and T (both are hidden here):</p>
+  <p>P(W=sun) = 0.30 + 0.10 + 0.10 + 0.15 = 0.65</p>
+  <p>P(W=rain) = 0.05 + 0.05 + 0.05 + 0.20 = 0.35</p>
+  <p><strong>Answer: P(W) = ⟨0.65, 0.35⟩</strong></p>
+
+  <h4>Query B: P(W | winter) — S is evidence, T is hidden</h4>
+  <p>Step 1 — SELECT rows where S=winter:</p>
+  <div class="table-wrap"><table>
+    <tr><th>S</th><th>T</th><th>W</th><th>P</th></tr>
+    <tr><td>winter</td><td>hot</td><td>sun</td><td>0.10</td></tr>
+    <tr><td>winter</td><td>hot</td><td>rain</td><td>0.05</td></tr>
+    <tr><td>winter</td><td>cold</td><td>sun</td><td>0.15</td></tr>
+    <tr><td>winter</td><td>cold</td><td>rain</td><td>0.20</td></tr>
+  </table></div>
+  <p>Step 2 — SUM OUT T (hidden variable):</p>
+  <p>P(W=sun, winter) = 0.10 + 0.15 = 0.25</p>
+  <p>P(W=rain, winter) = 0.05 + 0.20 = 0.25</p>
+  <p>Step 3 — NORMALIZE: Z = 0.25 + 0.25 = 0.50</p>
+  <p><strong>P(W=sun | winter) = 0.25/0.50 = 0.5</strong></p>
+  <p><strong>P(W=rain | winter) = 0.25/0.50 = 0.5</strong></p>
+
+  <h4>Query C: P(W | winter, hot) — S and T are both evidence</h4>
+  <p>Step 1 — SELECT rows where S=winter AND T=hot:</p>
+  <p>P(W=sun, winter, hot) = 0.10</p>
+  <p>P(W=rain, winter, hot) = 0.05</p>
+  <p>Z = 0.10 + 0.05 = 0.15</p>
+  <p><strong>P(W=sun | winter, hot) = 0.10/0.15 = 2/3 ≈ 0.667</strong></p>
+  <p><strong>P(W=rain | winter, hot) = 0.05/0.15 = 1/3 ≈ 0.333</strong></p>
+</div>
+
+<div class="callout callout-warn">
+  <strong>Complexity of Inference by Enumeration:</strong>
+  <div class="complexity-row"><div class="complexity-label">Time complexity</div><div class="complexity-val">O(d^n) — exponential in number of variables n</div></div>
+  <div class="complexity-row"><div class="complexity-label">Space complexity</div><div class="complexity-val">O(d^n) — to store the joint distribution</div></div>
+  <div class="complexity-row"><div class="complexity-label">n=30 Boolean variables</div><div class="complexity-val">≈ 1 billion entries — completely impractical</div></div>
+</div>
+
+<!-- ───── Conditional Probability ───── -->
+<h2 id="conditional" class="section-title">Conditional Probability — Detailed</h2>
+
+<div class="formula-box">
+  <span class="label">Definition of Conditional Probability</span>
+  <span class="hi">P(a | b) = P(a ∧ b) / P(b)</span>     provided P(b) &gt; 0
+
+  <span class="comment">-- "Probability of a, GIVEN b has occurred"</span>
+  <span class="comment">-- Restricts the sample space to worlds where b is true</span>
+  <span class="comment">-- Among those worlds, what fraction also has a?</span>
+</div>
+
+<div class="example-box">
+  <div class="ex-title">Disease Testing Example (Slides)</div>
+  <p>Given information:</p>
+  <div class="table-wrap"><table>
+    <tr><th>Disease (D)</th><th>Test Result (T)</th><th>Joint Probability</th></tr>
+    <tr><td>+d (has disease)</td><td>+t (positive test)</td><td>0.045</td></tr>
+    <tr><td>+d</td><td>-t (negative test)</td><td>0.005</td></tr>
+    <tr><td>-d (no disease)</td><td>+t</td><td>0.095</td></tr>
+    <tr><td>-d</td><td>-t</td><td>0.855</td></tr>
+  </table></div>
+  
+  <p><strong>Reading the table:</strong> P(+d) = 0.045 + 0.005 = <strong>0.05</strong> (5% have disease)</p>
+  <p>P(+t) = 0.045 + 0.095 = <strong>0.14</strong> (14% test positive)</p>
+
+  <h4>Computing conditional probabilities:</h4>
+  <p><strong>P(+t | +d)</strong> = P(+t ∧ +d) / P(+d) = 0.045 / 0.05 = <strong>0.9</strong></p>
+  <p>Interpretation: Test detects disease 90% of the time (sensitivity = 90%)</p>
+
+  <p><strong>P(+d | +t)</strong> = P(+t ∧ +d) / P(+t) = 0.045 / 0.14 ≈ <strong>0.32</strong></p>
+  <p>Interpretation: Only 32% of positive tests actually have the disease!</p>
+
+  <div class="callout callout-warn">
+    <strong>Counterintuitive result!</strong> Even though the test has 90% sensitivity, because the disease is rare (only 5% prior), most people who test positive are actually disease-free. This illustrates why prior probability matters enormously.
+  </div>
+</div>
+
+<!-- ───── Product Rule and Chain Rule ───── -->
+<h3 class="sub-title">Product Rule and Chain Rule</h3>
+
+<p>Rearranging the conditional probability formula gives the <strong>Product Rule</strong>:</p>
+
+<div class="formula-box">
+  <span class="label">Product Rule</span>
+  <span class="hi">P(a ∧ b) = P(a | b) × P(b)</span>
+  <span class="comment">-- Also written: P(a, b) = P(a|b) P(b)</span>
+</div>
+
+<div class="example-box">
+  <div class="ex-title">Product Rule Example — Computing Joint from Conditional</div>
+  <p>We know: P(Weather = sun) = 0.8 and P(Dress=wet | Weather) given below.</p>
+  <div class="table-wrap"><table>
+    <tr><th>D</th><th>W</th><th>P(D|W)</th></tr>
+    <tr><td>wet</td><td>sun</td><td>0.1</td></tr>
+    <tr><td>dry</td><td>sun</td><td>0.9</td></tr>
+    <tr><td>wet</td><td>rain</td><td>0.7</td></tr>
+    <tr><td>dry</td><td>rain</td><td>0.3</td></tr>
+  </table></div>
+  <p>Using Product Rule P(D,W) = P(D|W) × P(W):</p>
+  <p>P(wet, sun) = 0.1 × 0.8 = 0.08</p>
+  <p>P(dry, sun) = 0.9 × 0.8 = 0.72</p>
+  <p>P(wet, rain) = 0.7 × 0.2 = 0.14</p>
+  <p>P(dry, rain) = 0.3 × 0.2 = 0.06</p>
+</div>
+
+<p>The <strong>Chain Rule</strong> extends the product rule to any number of variables:</p>
+
+<div class="formula-box">
+  <span class="label">Chain Rule (General)</span>
+  P(x₁, x₂, ..., xₙ) = P(xₙ|xₙ₋₁,...,x₁) × P(xₙ₋₁|xₙ₋₂,...,x₁) × ... × P(x₂|x₁) × P(x₁)
+                      = <span class="hi">∏ᵢ P(xᵢ | xᵢ₋₁, ..., x₁)</span>
+
+  <span class="comment">-- Every joint distribution can ALWAYS be decomposed this way</span>
+  <span class="comment">-- This identity is ALWAYS true for any variables</span>
+</div>
+
+<!-- ───── Independence ───── -->
+<h2 id="independence" class="section-title">12.4 Independence</h2>
+
+<p>Two variables X and Y are <strong>independent</strong> (also: absolutely independent, marginally independent) when knowing the value of one tells you nothing about the other.</p>
+
+<div class="formula-box">
+  <span class="label">Independence — Three Equivalent Definitions</span>
+  <span class="hi">P(X, Y) = P(X) × P(Y)</span>          (joint factors)
+  <span class="hi">P(X | Y) = P(X)</span>                  (Y doesn't affect X)
+  <span class="hi">P(Y | X) = P(Y)</span>                  (X doesn't affect Y)
+</div>
+
+<div class="example-box">
+  <div class="ex-title">Classic Independence Example — Dental Variables + Weather</div>
+  <p>The book shows that Weather (sun/rain/cloud/snow) is completely independent of dental problems (Toothache, Cavity, Catch). Common sense: the weather outside doesn't affect what's going on in your teeth!</p>
+  <p>This means we can FACTOR the joint distribution:</p>
+  <div class="formula-box" style="margin:10px 0">
+    P(Toothache, Cavity, Catch, Weather)
+      = P(Toothache, Cavity, Catch) × P(Weather)
+    <span class="comment">-- 8-entry table × 4-entry table = 12 numbers instead of 32!</span>
+  </div>
+
+  <h4>Another independence example — Coin Flips</h4>
+  <p>n independent coin flips: each flip P(Cᵢ) = ⟨0.5, 0.5⟩. All flips are independent, so:</p>
+  <div class="formula-box" style="margin:10px 0">
+    P(C₁, C₂, ..., Cₙ) = P(C₁) × P(C₂) × ... × P(Cₙ)
+    <span class="comment">-- Full joint: 2ⁿ entries   vs.   Independent: n×2 entries</span>
+    <span class="comment">-- n=30:   1 billion entries  vs.   60 entries — HUGE savings!</span>
+  </div>
+</div>
+
+<div class="diagram-area">
+  <svg viewBox="0 0 500 180" xmlns="http://www.w3.org/2000/svg">
+    <rect x="10" y="10" width="220" height="160" rx="8" fill="#e8f6f5" stroke="#0f7b72" stroke-width="1.5"/>
+    <text x="120" y="35" font-family="serif" font-size="13" text-anchor="middle" font-weight="bold" fill="#0d1b2a">JOINT (32 entries)</text>
+    <text x="120" y="60" font-family="monospace" font-size="11" text-anchor="middle" fill="#0f7b72">P(T, Cavity, Catch, Weather)</text>
+    <text x="120" y="80" font-family="monospace" font-size="11" text-anchor="middle" fill="#5a6070">2×2×2×4 = 32 values</text>
+    <text x="120" y="110" font-family="serif" font-size="12" text-anchor="middle" fill="#e84c4c">Independence assumption:</text>
+    <text x="120" y="130" font-family="monospace" font-size="11" text-anchor="middle" fill="#0d1b2a">Weather ⊥ Dental vars</text>
+    
+    <text x="260" y="95" font-size="24" fill="#c9933a" font-weight="bold" text-anchor="middle">→</text>
+    
+    <rect x="280" y="10" width="210" height="160" rx="8" fill="#fff4e5" stroke="#c9933a" stroke-width="1.5"/>
+    <text x="385" y="35" font-family="serif" font-size="13" text-anchor="middle" font-weight="bold" fill="#0d1b2a">FACTORED (12 entries)</text>
+    <text x="385" y="60" font-family="monospace" font-size="10" text-anchor="middle" fill="#0f7b72">P(T,Cavity,Catch) × P(Weather)</text>
+    <text x="385" y="80" font-family="monospace" font-size="11" text-anchor="middle" fill="#5a6070">8 entries + 4 entries = 12</text>
+    <text x="385" y="115" font-family="serif" font-size="12" text-anchor="middle" fill="#c9933a">62.5% reduction in storage!</text>
+  </svg>
+</div>
+
+<!-- ───── Bayes' Rule ───── -->
+<h2 id="bayes" class="section-title">12.5 Bayes' Rule and Its Use</h2>
+
+<p>Bayes' Rule is derived directly from the two forms of the product rule:</p>
+
+<div class="formula-box">
+  <span class="label">Derivation of Bayes' Rule</span>
+  P(a ∧ b) = P(a|b) × P(b)     ...(1)
+  P(a ∧ b) = P(b|a) × P(a)     ...(2)
+
+  Setting (1) = (2):  P(a|b) × P(b) = P(b|a) × P(a)
+
+  Divide both sides by P(a):
+
+  <span class="hi">P(b|a) = P(a|b) × P(b) / P(a)</span>
+
+  Or in general form:
+  <span class="hi">P(Y|X) = P(X|Y) × P(Y) / P(X)</span>
+</div>
+
+<div class="callout callout-teal">
+  <strong>Why is Bayes' Rule so powerful?</strong> It lets us compute the "reverse" conditional probability. In practice, we often know P(effect|cause) from domain knowledge, but we want P(cause|effect) — the diagnostic direction. Bayes' Rule flips the direction!
+</div>
+
+<h3 class="sub-title">Components of Bayes' Rule</h3>
+
+<div class="table-wrap"><table>
+  <tr><th>Term</th><th>Name</th><th>Meaning</th></tr>
+  <tr><td>P(H)</td><td>Prior</td><td>Probability of hypothesis H before seeing evidence</td></tr>
+  <tr><td>P(E)</td><td>Likelihood of evidence</td><td>Normalizing constant — probability of evidence regardless of H</td></tr>
+  <tr><td>P(E|H)</td><td>Likelihood</td><td>How likely is evidence E if hypothesis H is true</td></tr>
+  <tr><td>P(H|E)</td><td>Posterior</td><td>Updated probability of H AFTER seeing evidence E</td></tr>
+</table></div>
+
+<div class="example-box">
+  <div class="ex-title">Example 1 — Meningitis Diagnosis (Book Example)</div>
+  <p><strong>Given:</strong></p>
+  <p>P(s | m) = 0.7 — stiff neck given meningitis: 70%</p>
+  <p>P(m) = 1/50,000 = 0.00002 — prior probability of meningitis</p>
+  <p>P(s) = 0.01 — prior probability of stiff neck (from any cause)</p>
+  
+  <h4>Find: P(m | s) — probability of meningitis given stiff neck</h4>
+  <div class="formula-box" style="margin:10px 0">
+    P(m | s) = P(s | m) × P(m) / P(s)
+             = 0.7 × (1/50,000) / 0.01
+             = 0.7 × 0.00002 / 0.01
+             = <span class="hi">0.0014</span>
+  </div>
+  <p><strong>Interpretation:</strong> Even though meningitis strongly causes stiff neck (70%), the chance of meningitis given a stiff neck is only 0.14%! This is because stiff necks are very common (1%) from many other causes, while meningitis is very rare.</p>
+  <div class="callout callout-warn" style="margin-top:10px">
+    <strong>Important note from slides:</strong> The posterior is small, but doctors should still check! Because missing meningitis has catastrophic consequences. The decision depends on both probability AND utility (cost of misdiagnosis).
+  </div>
+</div>
+
+<div class="example-box">
+  <div class="ex-title">Example 2 — Coins in a Bowl (Slides)</div>
+  <p>3 bowls, randomly selected. Bowl 1 has 2 red + 4 blue; Bowl 2 has 1 red + 5 blue; Bowl 3 has 5 red + 1 blue. A red coin is drawn.</p>
+  <p><strong>Find: P(B1 | R) — probability it came from Bowl 1</strong></p>
+  <div class="formula-box" style="margin:10px 0">
+    P(B1|R) = P(R|B1) × P(B1) / P(R)
+
+    P(B1) = 1/3 (equal chance of selecting any bowl)
+    P(R|B1) = 2/6 = 1/3
+    P(R) = P(R|B1)P(B1) + P(R|B2)P(B2) + P(R|B3)P(B3)
+         = (2/6)(1/3) + (1/6)(1/3) + (5/6)(1/3)
+         = (2+1+5)/(18) = 8/18 = 4/9
+
+    P(B1|R) = (1/3)(1/3) / (4/9) = (1/9) / (4/9) = 1/4
+  </div>
+</div>
+
+<h3 class="sub-title">Applying Bayes' Rule with Multiple Evidence</h3>
+
+<p>When there are multiple pieces of evidence (e.g., toothache AND catch in dental example), naive Bayes' rule requires computing P(toothache ∧ catch | Cavity) — which requires the full joint again. The key insight is to use <strong>conditional independence</strong>.</p>
+
+<!-- ───── Conditional Independence ───── -->
+<h2 id="conditional-ind" class="section-title">12.5.2 Conditional Independence</h2>
+
+<p><strong>Conditional Independence</strong> is a much weaker (and more commonly available) form of independence. X and Y are conditionally independent given Z if, once we know Z, knowing X tells us nothing more about Y (and vice versa).</p>
+
+<div class="formula-box">
+  <span class="label">Conditional Independence Definition</span>
+  X ⊥ Y | Z    (read: "X is independent of Y given Z")
+
+  <span class="hi">P(X, Y | Z) = P(X | Z) × P(Y | Z)</span>
+
+  Equivalent forms:
+  P(X | Y, Z) = P(X | Z)
+  P(Y | X, Z) = P(Y | Z)
+</div>
+
+<div class="example-box">
+  <div class="ex-title">Dental Example — Toothache ⊥ Catch | Cavity</div>
+  <p>Consider: Toothache depends on nerve state, Catch depends on whether probe catches in a hole. Both are caused by Cavity.</p>
+  <p><strong>Claim:</strong> P(Toothache, Catch | Cavity) = P(Toothache | Cavity) × P(Catch | Cavity)</p>
+  
+  <h4>Why?</h4>
+  <p>If we already KNOW the cavity is present, then the toothache tells us nothing extra about the probe catching — they are both just symptoms of the same known cause.</p>
+  <p>If we already KNOW there is NO cavity, then again, knowing about toothache doesn't change our belief about catch.</p>
+  
+  <h4>Power of this insight:</h4>
+  <div class="formula-box" style="margin:10px 0">
+    Without conditional independence:
+    Need P(toothache ∧ catch | Cavity) — requires 2^2 = 4 numbers per value of Cavity
+
+    With conditional independence:
+    P(Toothache | Cavity) + P(Catch | Cavity) — requires 2+2 = 4 numbers total
+    (vs. 8 numbers for the joint conditional)
+  </div>
+  
+  <p><strong>Full decomposition with conditional independence:</strong></p>
+  <div class="formula-box" style="margin:10px 0">
+    P(Toothache, Catch, Cavity)
+      = P(Toothache | Cavity) × P(Catch | Cavity) × P(Cavity)
+    
+    <span class="comment">-- Original: 7 independent parameters</span>
+    <span class="comment">-- With cond. independence: 5 independent parameters</span>
+    <span class="comment">-- With n symptoms: O(n) instead of O(2^n)!</span>
+  </div>
+</div>
+
+<div class="example-box">
+  <div class="ex-title">Slides Example — Toothache, Cavity, Catch, Weather</div>
+  <p>From the slides, the assumption is:</p>
+  <p>P(T, X, C, W) = P(T, X, C) × P(W)</p>
+  <p>where Catch = X-ray (abbreviated X in slide).</p>
+  <p>Weather is <em>absolutely independent</em> of dental variables.</p>
+  <p>Toothache and Catch are <em>conditionally independent given Cavity</em>.</p>
+</div>
+
+<div class="key-insight">
+  Conditional independence, brought about by direct causal relationships, is the most fundamental and practically important form of probabilistic knowledge. It is what makes reasoning in complex domains tractable — and it is the foundation of Bayesian networks.
+</div>
+
+<!-- ───── Naive Bayes ───── -->
+<h2 id="naive-bayes" class="section-title">12.6 Naive Bayes Models</h2>
+
+<p>A <strong>Naive Bayes model</strong> assumes that all "effect" variables are conditionally independent given a single "cause" variable. The word "naive" reflects that this is an approximation — in reality, effects often do influence each other.</p>
+
+<div class="formula-box">
+  <span class="label">Naive Bayes Joint Distribution</span>
+  <span class="hi">P(Cause, E₁, ..., Eₙ) = P(Cause) × ∏ᵢ P(Eᵢ | Cause)</span>
+
+  To classify (find most likely Cause given evidence E=e):
+  MAP(H) = argmax P(H | e)
+         = argmax P(e | H) × P(H)          <span class="comment">-- drop P(e), same for all H</span>
+         = argmax P(E₁|H) × P(E₂|H) × ... × P(Eₙ|H) × P(H)
+</div>
+
+<h3 class="sub-title">Types of Naive Bayes (From Slides)</h3>
+<div class="table-wrap"><table>
+  <tr><th>Type</th><th>When to Use</th><th>Feature Distribution</th></tr>
+  <tr><td><strong>Gaussian NB</strong></td><td>Continuous features, assume normal distribution</td><td>N(μ, σ²)</td></tr>
+  <tr><td><strong>Bernoulli NB</strong></td><td>Binary features (0/1 — word present/absent)</td><td>Binary</td></tr>
+  <tr><td><strong>Multinomial NB</strong></td><td>Count data (word frequency in documents)</td><td>Count/frequency</td></tr>
+</table></div>
+
+<div class="example-box">
+  <div class="ex-title">Slides Example — Animal Classifier (Parrot/Dog/Fish)</div>
+  <p><strong>Training data:</strong> 1500 records, 3 classes (500 each), 4 features: Swim, Wings, Green, Teeth</p>
+  
+  <div class="table-wrap"><table>
+    <tr><th>Feature</th><th>P(feat | Parrot)</th><th>P(feat | Dog)</th><th>P(feat | Fish)</th></tr>
+    <tr><td>Swim</td><td>0.10</td><td>0.90</td><td>1.00</td></tr>
+    <tr><td>Wings</td><td>1.00</td><td>0.00</td><td>0.00</td></tr>
+    <tr><td>Green</td><td>0.80</td><td>0.00</td><td>0.20</td></tr>
+    <tr><td>Dangerous Teeth</td><td>0.00</td><td>1.00</td><td>0.10</td></tr>
+  </table></div>
+  
+  <p>P(Parrot) = P(Dog) = P(Fish) = 1/3 = 0.333</p>
+
+  <h4>Record 1: Evidence = {Swim=T, Green=T} — What animal?</h4>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>P(Dog | Swim, Green)</strong> = P(Swim|Dog)×P(Green|Dog)×P(Dog)/P(evidence) = 0.9×0×0.333/P(e) = <strong>0</strong></div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>P(Parrot | Swim, Green)</strong> = 0.1×0.80×0.333/P(e) = 0.0264/P(e)</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>P(Fish | Swim, Green)</strong> = 1.0×0.2×0.333/P(e) = 0.0666/P(e)</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">Since 0.0666 &gt; 0.0264 &gt; 0, <strong>classify as Fish!</strong></div></div>
+  </div>
+
+  <h4>Record 2: Evidence = {Swim=T, Green=T, Teeth=T}</h4>
+  <p>P(Dog|...) = 0.9×0×1×0.333 = <strong>0</strong> (Green=0 wipes it out)</p>
+  <p>P(Parrot|...) = 0.1×0.8×0×0.333 = <strong>0</strong> (Teeth=0 wipes it out)</p>
+  <p>P(Fish|...) = 1.0×0.2×0.1×0.333 = 0.00666/P(e) → <strong>classify as Fish!</strong></p>
+</div>
+
+<h3 class="sub-title">12.6.1 Text Classification with Naive Bayes</h3>
+
+<p>A very common application: given a text document, classify it into a category (news/sports/business/weather/entertainment). The "cause" is Category, the "effects" are the presence/absence of key words.</p>
+
+<div class="steps">
+  <div class="step"><div class="step-num"></div><div class="step-body"><strong>Estimate P(Category=c)</strong> as the fraction of training documents in that category.</div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body"><strong>Estimate P(HasWordᵢ | Category)</strong> as the fraction of documents in each category containing word i.</div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body"><strong>For new document:</strong> find which words are present, apply Naive Bayes, pick category with highest posterior.</div></div>
+</div>
+
+<div class="callout callout-teal">
+  <strong>Applications:</strong> Language detection, document retrieval, spam filtering, sentiment analysis. Naive Bayes works surprisingly well even when the independence assumption is violated! The ranking of categories is usually correct even if the actual probabilities are overconfident.
+</div>
+
+<!-- ───── Wumpus World ───── -->
+<h2 id="wumpus" class="section-title">12.7 The Wumpus World Revisited</h2>
+
+<p>The book uses the wumpus world to demonstrate probabilistic reasoning with conditional independence.</p>
+
+<div class="example-box">
+  <div class="ex-title">Wumpus World Probability Problem</div>
+  <p><strong>Setup:</strong> Agent has visited [1,1], [1,2], [2,1]. Found breezes in [1,2] and [2,1]. No pit in visited squares. Each unvisited square has P(pit) = 0.2 independently.</p>
+  <p><strong>Query:</strong> P(pit in [1,3]) — how likely is [1,3] to contain a pit?</p>
+  
+  <h4>Key insight using conditional independence:</h4>
+  <p>The breezes are conditionally independent of the "Other" unknown squares given the known, frontier, and query variables. This lets us avoid summing over all 4096 possible configurations of 12 unknown squares.</p>
+  
+  <h4>Result (from book calculation):</h4>
+  <div class="formula-box" style="margin:10px 0">
+    P(P₁₃ = pit | known, breeze) ≈ 0.31
+    P(P₂₂ = pit | known, breeze) ≈ 0.86
+  </div>
+  <p><strong>Conclusion:</strong> [2,2] is very dangerous (86% chance of pit)! A logical agent couldn't distinguish [1,3] from [2,2], but a probabilistic agent clearly should avoid [2,2] and prefer [1,3].</p>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     CHAPTER 13
+══════════════════════════════════════════════════ -->
+<div id="ch13" class="chapter-divider">
+  <div class="chapter-num">13</div>
+  <div class="chapter-info">
+    <h2>Probabilistic Reasoning — Bayesian Networks</h2>
+    <p>A systematic, graphical approach to representing and computing with complex probabilistic relationships using directed acyclic graphs and conditional probability tables.</p>
+  </div>
+</div>
+
+<p>Chapter 12 showed that the full joint distribution can answer any question, but it is impractically large. Chapter 13 introduces <strong>Bayesian Networks</strong> — a way to represent the same information much more compactly by explicitly encoding conditional independence relationships.</p>
+
+<!-- ───── 13.1 Representing Knowledge ───── -->
+<h2 id="bn-represent" class="section-title">13.1 Representing Knowledge in an Uncertain Domain</h2>
+
+<div class="def-box">
+  <div class="def-label">Bayesian Network (Bayes Net)</div>
+  <p>A directed acyclic graph (DAG) where each node is a random variable, each directed arrow represents a direct causal influence, and each node has a conditional probability table (CPT) quantifying the relationship with its parents.</p>
+</div>
+
+<h3 class="sub-title">Formal Specification of a Bayesian Network</h3>
+
+<div class="steps">
+  <div class="step"><div class="step-num"></div><div class="step-body"><strong>Nodes:</strong> One per random variable — may be discrete or continuous.</div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body"><strong>Directed Links (Arrows):</strong> Arrow from X to Y means X is a parent of Y and has a direct influence on Y. The graph must have NO directed cycles (it is a DAG).</div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body"><strong>Conditional Probability Tables (CPTs):</strong> Each node Xᵢ has an associated probability distribution P(Xᵢ | Parents(Xᵢ)). This is a table with one row per combination of parent values.</div></div>
+</div>
+
+<div class="callout callout-teal">
+  <strong>A Bayes net = Topology (graph structure) + Local Conditional Probabilities (CPTs)</strong>
+</div>
+
+<h3 class="sub-title">Simple Bayesian Network — Weather & Dental (Figure 13.1)</h3>
+
+<div class="diagram-area">
+  <svg viewBox="0 0 500 220" xmlns="http://www.w3.org/2000/svg">
+    <!-- Weather (isolated node) -->
+    <rect x="20" y="80" width="100" height="40" rx="20" fill="#0f7b72" stroke="#0d1b2a" stroke-width="2"/>
+    <text x="70" y="105" font-family="serif" font-size="13" text-anchor="middle" fill="white" font-weight="bold">Weather</text>
+
+    <!-- Cavity (root cause) -->
+    <rect x="200" y="30" width="100" height="40" rx="20" fill="#1b2d45" stroke="#0d1b2a" stroke-width="2"/>
+    <text x="250" y="55" font-family="serif" font-size="13" text-anchor="middle" fill="white" font-weight="bold">Cavity</text>
+
+    <!-- Toothache -->
+    <rect x="130" y="150" width="110" height="40" rx="20" fill="#c9933a" stroke="#0d1b2a" stroke-width="2"/>
+    <text x="185" y="175" font-family="serif" font-size="13" text-anchor="middle" fill="white" font-weight="bold">Toothache</text>
+
+    <!-- Catch -->
+    <rect x="260" y="150" width="100" height="40" rx="20" fill="#c9933a" stroke="#0d1b2a" stroke-width="2"/>
+    <text x="310" y="175" font-family="serif" font-size="13" text-anchor="middle" fill="white" font-weight="bold">Catch</text>
+
+    <!-- Arrows from Cavity -->
+    <line x1="230" y1="70" x2="200" y2="148" stroke="#0f7b72" stroke-width="2.5" marker-end="url(#arr)"/>
+    <line x1="270" y1="70" x2="295" y2="148" stroke="#0f7b72" stroke-width="2.5" marker-end="url(#arr)"/>
+
+    <!-- Labels -->
+    <text x="70" y="145" font-family="monospace" font-size="11" text-anchor="middle" fill="#5a6070">isolated</text>
+    <text x="250" y="128" font-family="monospace" font-size="10" text-anchor="middle" fill="#0f7b72">causes both</text>
+    <text x="185" y="210" font-family="monospace" font-size="10" text-anchor="middle" fill="#5a6070">no direct link</text>
+    <text x="310" y="210" font-family="monospace" font-size="10" text-anchor="middle" fill="#5a6070">between these</text>
+
+    <defs>
+      <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="#0f7b72"/>
+      </marker>
+    </defs>
+  </svg>
+  <p style="font-size:13px; color:#5a6070; margin-top:8px;">Figure 13.1 — Weather is independent. Toothache and Catch are conditionally independent given Cavity. No arrow between Toothache and Catch because no direct causal link exists.</p>
+</div>
+
+<!-- ───── Alarm Network ───── -->
+<h3 class="sub-title">The Alarm Network (Figure 13.2) — Key Example</h3>
+
+<p>This is the most important example in the chapter (due to Judea Pearl). You have a new burglar alarm. It can be triggered by burglary or earthquake. Neighbors John and Mary call when they hear the alarm.</p>
+
+<div class="diagram-area">
+  <svg viewBox="0 0 600 300" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arr2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="#0f7b72"/>
+      </marker>
+    </defs>
+    <!-- Burglary -->
+    <rect x="80" y="20" width="110" height="40" rx="20" fill="#e84c4c" stroke="#0d1b2a" stroke-width="2"/>
+    <text x="135" y="45" font-family="serif" font-size="13" text-anchor="middle" fill="white" font-weight="bold">Burglary</text>
+    <text x="135" y="15" font-family="monospace" font-size="10" text-anchor="middle" fill="#e84c4c">P(B=T)=0.001</text>
+
+    <!-- Earthquake -->
+    <rect x="400" y="20" width="120" height="40" rx="20" fill="#e84c4c" stroke="#0d1b2a" stroke-width="2"/>
+    <text x="460" y="45" font-family="serif" font-size="13" text-anchor="middle" fill="white" font-weight="bold">Earthquake</text>
+    <text x="460" y="15" font-family="monospace" font-size="10" text-anchor="middle" fill="#e84c4c">P(E=T)=0.002</text>
+
+    <!-- Alarm -->
+    <rect x="230" y="130" width="130" height="40" rx="20" fill="#1b2d45" stroke="#0d1b2a" stroke-width="2"/>
+    <text x="295" y="155" font-family="serif" font-size="13" text-anchor="middle" fill="white" font-weight="bold">Alarm</text>
+
+    <!-- JohnCalls -->
+    <rect x="80" y="240" width="120" height="40" rx="20" fill="#0f7b72" stroke="#0d1b2a" stroke-width="2"/>
+    <text x="140" y="265" font-family="serif" font-size="13" text-anchor="middle" fill="white" font-weight="bold">JohnCalls</text>
+
+    <!-- MaryCalls -->
+    <rect x="390" y="240" width="120" height="40" rx="20" fill="#0f7b72" stroke="#0d1b2a" stroke-width="2"/>
+    <text x="450" y="265" font-family="serif" font-size="13" text-anchor="middle" fill="white" font-weight="bold">MaryCalls</text>
+
+    <!-- Arrows -->
+    <line x1="170" y1="55" x2="265" y2="128" stroke="#0f7b72" stroke-width="2" marker-end="url(#arr2)"/>
+    <line x1="420" y1="55" x2="330" y2="128" stroke="#0f7b72" stroke-width="2" marker-end="url(#arr2)"/>
+    <line x1="270" y1="170" x2="185" y2="238" stroke="#0f7b72" stroke-width="2" marker-end="url(#arr2)"/>
+    <line x1="320" y1="170" x2="405" y2="238" stroke="#0f7b72" stroke-width="2" marker-end="url(#arr2)"/>
+
+    <!-- CPT labels -->
+    <text x="190" y="100" font-family="monospace" font-size="9" fill="#5a6070">direct causes</text>
+    <text x="200" y="210" font-family="monospace" font-size="9" fill="#5a6070">P(J|A=T)=0.9</text>
+    <text x="370" y="210" font-family="monospace" font-size="9" fill="#5a6070">P(M|A=T)=0.7</text>
+  </svg>
+  <p style="font-size:13px; color:#5a6070; margin-top:8px;">Figure 13.2 — The Alarm Bayesian Network. Red nodes are root causes (no parents). Blue nodes are effects (have parents). Arrows indicate direct causal influence.</p>
+</div>
+
+<h4 class="micro-title">Alarm Network — Full CPTs</h4>
+
+<div class="table-wrap"><table>
+  <tr><th colspan="3">P(Burglary)</th><th colspan="3">P(Earthquake)</th></tr>
+  <tr><td>+b (true)</td><td>0.001</td><td></td><td>+e (true)</td><td>0.002</td><td></td></tr>
+  <tr><td>-b (false)</td><td>0.999</td><td></td><td>-e (false)</td><td>0.998</td><td></td></tr>
+</table></div>
+
+<div class="table-wrap"><table>
+  <tr><th>B</th><th>E</th><th>P(A=true | B,E)</th><th>P(A=false | B,E)</th></tr>
+  <tr><td>+b</td><td>+e</td><td>0.95</td><td>0.05</td></tr>
+  <tr><td>+b</td><td>-e</td><td>0.94</td><td>0.06</td></tr>
+  <tr><td>-b</td><td>+e</td><td>0.29</td><td>0.71</td></tr>
+  <tr><td>-b</td><td>-e</td><td>0.001</td><td>0.999</td></tr>
+</table></div>
+
+<div class="table-wrap"><table>
+  <tr><th>A</th><th>P(J=true|A)</th><th>A</th><th>P(M=true|A)</th></tr>
+  <tr><td>+a</td><td>0.90</td><td>+a</td><td>0.70</td></tr>
+  <tr><td>-a</td><td>0.05</td><td>-a</td><td>0.01</td></tr>
+</table></div>
+
+<div class="example-box">
+  <div class="ex-title">Computing a Joint Probability from the Alarm Network</div>
+  <p><strong>Query:</strong> P(burglary=T, earthquake=F, alarm=T, john=F, mary=T) = ?</p>
+  <div class="formula-box" style="margin:10px 0">
+    P(b, ¬e, a, ¬j, m) = P(b) × P(¬e) × P(a|b,¬e) × P(¬j|a) × P(m|a)
+                        = 0.001 × 0.998 × 0.94 × 0.10 × 0.70
+                        = <span class="hi">≈ 0.000028</span>
+  </div>
+  <p>This is the probability of this particular combination of events happening simultaneously. It's very small, but it's a specific scenario.</p>
+</div>
+
+<!-- ───── 13.2 Semantics ───── -->
+<h2 id="bn-semantics" class="section-title">13.2 The Semantics of Bayesian Networks</h2>
+
+<h3 class="sub-title">Global Semantics — The Joint Distribution Formula</h3>
+
+<div class="formula-box">
+  <span class="label">Bayes Net Global Semantics</span>
+  <span class="hi">P(x₁, ..., xₙ) = ∏ᵢ P(xᵢ | parents(Xᵢ))</span>
+
+  <span class="comment">-- The full joint probability is the PRODUCT of all local CPT entries</span>
+  <span class="comment">-- Each variable depends ONLY on its parents, not on all predecessors</span>
+  <span class="comment">-- This is what makes Bayes nets compact!</span>
+</div>
+
+<h3 class="sub-title">Connection to Chain Rule</h3>
+
+<p>The chain rule says:</p>
+<div class="formula-box">
+  P(x₁,...,xₙ) = ∏ᵢ P(xᵢ | xᵢ₋₁, ..., x₁)    <span class="comment">(chain rule — always true)</span>
+</div>
+
+<p>The Bayes net says:</p>
+<div class="formula-box">
+  P(x₁,...,xₙ) = ∏ᵢ P(xᵢ | parents(Xᵢ))       <span class="comment">(Bayes net — a special structure)</span>
+</div>
+
+<p>Comparing these two, the Bayes net is valid if and only if each node is <strong>conditionally independent of its non-parent predecessors given its parents</strong>. This is the key conditional independence assertion built into the graph structure.</p>
+
+<div class="callout callout-teal">
+  <strong>Methodology for building a Bayes Net:</strong>
+  <ol style="margin-top:8px; padding-left:20px;">
+    <li>List all variables. Order them with causes before effects.</li>
+    <li>For each variable Xᵢ: find the minimal set of parents from earlier variables such that Xᵢ is conditionally independent of all other earlier variables given its parents.</li>
+    <li>For each parent relationship, draw an arrow.</li>
+    <li>Fill in the CPT for each variable given its parents.</li>
+  </ol>
+</div>
+
+<h3 class="sub-title">Compactness of Bayesian Networks</h3>
+
+<div class="table-wrap"><table>
+  <tr><th>Representation</th><th>Storage Required</th><th>Example (n=30, k=5)</th></tr>
+  <tr><td>Full Joint Distribution</td><td>d^n</td><td>2^30 ≈ 1 billion</td></tr>
+  <tr><td>Bayes Net (max k parents)</td><td>n × 2^k</td><td>30 × 32 = 960 numbers</td></tr>
+</table></div>
+
+<p>This is a million-times reduction in the amount of information needed!</p>
+
+<h3 class="sub-title">Conditional Independence Properties in BNs</h3>
+
+<div class="def-box">
+  <div class="def-label">Non-Descendants Property</div>
+  <p>Each variable is conditionally independent of its <strong>non-descendants</strong> given its <strong>parents</strong>.</p>
+</div>
+
+<div class="def-box">
+  <div class="def-label">Markov Blanket Property</div>
+  <p>A variable is conditionally independent of ALL other nodes in the network given its <strong>Markov blanket</strong> = {parents, children, children's other parents}.</p>
+</div>
+
+<div class="example-box">
+  <div class="ex-title">Markov Blanket Example — Burglary in Alarm Network</div>
+  <p>For node <strong>Burglary</strong>:</p>
+  <p>Parents: none (root node)</p>
+  <p>Children: Alarm</p>
+  <p>Children's other parents: Earthquake</p>
+  <p><strong>Markov Blanket of Burglary = {Alarm, Earthquake}</strong></p>
+  <p>This means: Burglary is independent of JohnCalls and MaryCalls, given Alarm and Earthquake.</p>
+</div>
+
+<!-- ───── Compact CPTs ───── -->
+<h2 id="cpt-compact" class="section-title">13.2.2 Efficient Representation of Conditional Distributions</h2>
+
+<p>For large networks, explicitly writing out every CPT entry is expensive. Several canonical patterns allow compact representation:</p>
+
+<h3 class="sub-title">1. Deterministic Nodes</h3>
+<p>A node whose value is completely determined by its parents (no uncertainty). Examples:</p>
+<div class="formula-box">
+  NorthAmerican = Canadian ∨ US ∨ Mexican  (logical OR)
+  BestPrice = min(Price1, Price2, ..., PriceN)  (minimum function)
+  WaterStored = Previous + Inflows − Outflows  (arithmetic)
+</div>
+
+<h3 class="sub-title">2. Context-Specific Independence (CSI)</h3>
+<p>A variable is independent of some parents given certain values of other parents.</p>
+
+<div class="example-box">
+  <div class="ex-title">CSI Example — Car Damage</div>
+  <p>P(Damage | Ruggedness, Accident):</p>
+  <p>If Accident=false, then Damage does NOT depend on Ruggedness (only minor vandalism, same for all cars).</p>
+  <p>If Accident=true, then Damage depends heavily on Ruggedness.</p>
+  <div class="formula-box" style="margin:10px 0">
+    P(Damage | Ruggedness, Accident) =
+      if (Accident = false) then d₁
+      else d₂(Ruggedness)
+  </div>
+</div>
+
+<h3 class="sub-title">3. Noisy-OR Model</h3>
+<p>A generalization of logical OR for uncertain causal relationships. "Fever is caused by Cold, Flu, or Malaria — but each cause might be inhibited."</p>
+
+<div class="example-box">
+  <div class="ex-title">Noisy-OR for Fever (Figure 13.5)</div>
+  <p><strong>Inhibition probabilities (q-values):</strong></p>
+  <p>q_cold = P(¬fever | cold only) = 0.6 → i.e., Cold causes fever 40% of the time</p>
+  <p>q_flu = P(¬fever | flu only) = 0.2 → i.e., Flu causes fever 80% of the time</p>
+  <p>q_malaria = P(¬fever | malaria only) = 0.1 → i.e., Malaria causes fever 90% of the time</p>
+  
+  <h4>General Noisy-OR Rule:</h4>
+  <div class="formula-box" style="margin:10px 0">
+    P(¬child | parents) = ∏_{j: Xⱼ=true} qⱼ
+    <span class="comment">-- Fever absent iff ALL active causes are inhibited</span>
+    <span class="comment">-- Inhibitions are INDEPENDENT of each other</span>
+  </div>
+
+  <h4>Example calculation — P(¬fever | cold=T, flu=T, malaria=F):</h4>
+  <p>P(¬fever | cold, flu, ¬malaria) = q_cold × q_flu = 0.6 × 0.2 = 0.12</p>
+  <p>P(fever | cold, flu, ¬malaria) = 1 − 0.12 = <strong>0.88</strong></p>
+
+  <div class="table-wrap"><table>
+    <tr><th>Cold</th><th>Flu</th><th>Malaria</th><th>P(fever)</th><th>P(¬fever)</th></tr>
+    <tr><td>F</td><td>F</td><td>F</td><td>0.0</td><td>1.0</td></tr>
+    <tr><td>F</td><td>F</td><td>T</td><td>0.9</td><td>0.1</td></tr>
+    <tr><td>F</td><td>T</td><td>F</td><td>0.8</td><td>0.2</td></tr>
+    <tr><td>T</td><td>F</td><td>F</td><td>0.4</td><td>0.6</td></tr>
+    <tr><td>F</td><td>T</td><td>T</td><td>0.98</td><td>0.02 = 0.2×0.1</td></tr>
+    <tr><td>T</td><td>T</td><td>F</td><td>0.88</td><td>0.12 = 0.6×0.2</td></tr>
+    <tr><td>T</td><td>F</td><td>T</td><td>0.94</td><td>0.06 = 0.6×0.1</td></tr>
+    <tr><td>T</td><td>T</td><td>T</td><td>0.988</td><td>0.012 = 0.6×0.2×0.1</td></tr>
+  </table></div>
+  <p><strong>Key efficiency:</strong> Full CPT for 3 parents needs 2³=8 rows, each requiring a probability value. Noisy-OR needs only 3 q-values. For k parents: O(k) parameters vs. O(2^k) for full CPT!</p>
+</div>
+
+<!-- ───── 13.3 Exact Inference ───── -->
+<h2 id="exact" class="section-title">13.3 Exact Inference in Bayesian Networks</h2>
+
+<p>Given a Bayes net, how do we compute P(X | e) — the posterior probability of a query variable given evidence?</p>
+
+<h3 class="sub-title">13.3.1 Inference by Enumeration</h3>
+
+<p>The basic approach: sum over the full joint distribution (restricted to values consistent with evidence), then normalize.</p>
+
+<div class="formula-box">
+  <span class="label">Enumeration Formula for Bayes Net Inference</span>
+  P(X | e) = α Σ_y P(X, e, y)
+            = α Σ_y ∏ᵢ P(xᵢ | parents(Xᵢ))
+
+  <span class="comment">-- y = hidden variables (not query, not evidence)</span>
+  <span class="comment">-- Complexity: O(n × 2ⁿ) naive, O(2ⁿ) with nested structure</span>
+</div>
+
+<div class="example-box">
+  <div class="ex-title">Alarm Network — Query: P(Burglary | JohnCalls=T, MaryCalls=T)</div>
+  <p>Hidden variables: Earthquake (E), Alarm (A)</p>
+  <div class="formula-box" style="margin:10px 0">
+    P(B | j, m) = α Σ_e Σ_a P(B, j, m, e, a)
+                = α Σ_e Σ_a P(B) P(e) P(a|B,e) P(j|a) P(m|a)
+
+    For B=true:
+    P(b|j,m) = α Σ_e Σ_e P(b) P(e) P(a|b,e) P(j|a) P(m|a)
+  </div>
+  
+  <p>Using nested sums and looking up from CPT tables:</p>
+  <p>P(b|j,m) = α × 0.00059224</p>
+  <p>P(¬b|j,m) = α × 0.0014919</p>
+  <p>Normalize: α = 1/(0.00059224 + 0.0014919)</p>
+  <p><strong>P(B|j,m) ≈ ⟨0.284, 0.716⟩</strong> — about 28% chance of burglary given both called!</p>
+</div>
+
+<h3 class="sub-title">13.3.2 Variable Elimination Algorithm</h3>
+
+<p>Enumeration recomputes the same subexpressions many times. Variable Elimination (VE) solves this by computing each sub-result once and caching it.</p>
+
+<div class="key-insight">
+  The key idea: move summations INWARD as far as possible. Instead of computing the full joint and then summing, compute partial products and sum out variables one at a time. This can dramatically reduce the computation.
+</div>
+
+<h4 class="micro-title">Operations in Variable Elimination</h4>
+
+<p><strong>1. Factors:</strong> A factor is a table indexed by some variables, containing non-negative numbers (not necessarily summing to 1). Initially, each factor is a CPT entry.</p>
+
+<p><strong>2. Pointwise Product:</strong> Multiply two factors by combining their variable lists and computing entry-by-entry products for all matching combinations.</p>
+
+<div class="example-box">
+  <div class="ex-title">Pointwise Product Example (Figure 13.12)</div>
+  <p>f(X,Y) × g(Y,Z) = h(X,Y,Z)</p>
+  <div class="table-wrap"><table>
+    <tr><th>X</th><th>Y</th><th>f(X,Y)</th><th>Y</th><th>Z</th><th>g(Y,Z)</th><th>X</th><th>Y</th><th>Z</th><th>h(X,Y,Z)</th></tr>
+    <tr><td>T</td><td>T</td><td>0.3</td><td>T</td><td>T</td><td>0.2</td><td>T</td><td>T</td><td>T</td><td>0.3×0.2=0.06</td></tr>
+    <tr><td>T</td><td>F</td><td>0.7</td><td>T</td><td>F</td><td>0.8</td><td>T</td><td>T</td><td>F</td><td>0.3×0.8=0.24</td></tr>
+    <tr><td>F</td><td>T</td><td>0.9</td><td>F</td><td>T</td><td>0.6</td><td>T</td><td>F</td><td>T</td><td>0.7×0.6=0.42</td></tr>
+    <tr><td>F</td><td>F</td><td>0.1</td><td>F</td><td>F</td><td>0.4</td><td>T</td><td>F</td><td>F</td><td>0.7×0.4=0.28</td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td>F</td><td>T</td><td>T</td><td>0.9×0.2=0.18</td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td>F</td><td>T</td><td>F</td><td>0.9×0.8=0.72</td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td>F</td><td>F</td><td>T</td><td>0.1×0.6=0.06</td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td>F</td><td>F</td><td>F</td><td>0.1×0.4=0.04</td></tr>
+  </table></div>
+</div>
+
+<p><strong>3. Summing Out (Marginalization):</strong> Sum a factor over one of its variables to produce a smaller factor.</p>
+
+<div class="example-box">
+  <div class="ex-title">Summing Out Example</div>
+  <p>To sum out X from h(X,Y,Z):</p>
+  <div class="formula-box" style="margin:10px 0">
+    h₂(Y,Z) = Σ_x h(X,Y,Z) = h(x=T,Y,Z) + h(x=F,Y,Z)
+
+    h₂(T,T) = 0.06 + 0.18 = 0.24
+    h₂(T,F) = 0.24 + 0.72 = 0.96
+    h₂(F,T) = 0.42 + 0.06 = 0.48
+    h₂(F,F) = 0.28 + 0.04 = 0.32
+  </div>
+</div>
+
+<h4 class="micro-title">General Variable Elimination Algorithm</h4>
+
+<div class="steps">
+  <div class="step"><div class="step-num"></div><div class="step-body"><strong>Initialize:</strong> Create one factor per node from its CPT. Apply evidence: restrict any evidence variable to its observed value.</div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body"><strong>Eliminate hidden variables one by one:</strong> For each hidden variable H, collect all factors containing H, compute their pointwise product, then sum out H.</div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body"><strong>Finish:</strong> Multiply remaining factors (over query variable and evidence) and normalize.</div></div>
+</div>
+
+<div class="example-box">
+  <div class="ex-title">VE on Alarm Network — P(B | j, m)</div>
+  <p>Factors: f₁(B)=P(B), f₂(E)=P(E), f₃(A,B,E)=P(A|B,E), f₄(A)=P(j|A), f₅(A)=P(m|A)</p>
+  <p>Evidence: j=true (fixes f₄), m=true (fixes f₅)</p>
+  
+  <h4>Step 1: Eliminate A (sum out A)</h4>
+  <div class="formula-box" style="margin:10px 0">
+    f₆(B,E) = Σ_a f₃(a,B,E) × f₄(a) × f₅(a)
+            = f₃(T,B,E)×f₄(T)×f₅(T) + f₃(F,B,E)×f₄(F)×f₅(F)
+    <span class="comment">-- Result: a 2×2 table over B and E</span>
+  </div>
+
+  <h4>Step 2: Eliminate E (sum out E)</h4>
+  <div class="formula-box" style="margin:10px 0">
+    f₇(B) = Σ_e f₂(e) × f₆(B,e)
+           = f₂(T)×f₆(B,T) + f₂(F)×f₆(B,F)
+    <span class="comment">-- Result: a 2-element vector over B</span>
+  </div>
+
+  <h4>Step 3: Multiply remaining factors and normalize</h4>
+  <div class="formula-box" style="margin:10px 0">
+    P(B | j, m) = Normalize(f₁(B) × f₇(B))
+               ≈ Normalize(⟨0.00059224, 0.0014919⟩)
+               ≈ ⟨0.284, 0.716⟩
+  </div>
+</div>
+
+<h3 class="sub-title">Variable Ordering and Complexity</h3>
+
+<div class="callout callout-warn">
+  <strong>The order you eliminate variables MATTERS!</strong> Different orderings create different intermediate factors of different sizes. The time and space complexity is dominated by the SIZE of the largest factor created. Finding optimal ordering is NP-hard, but good heuristics exist (greedy: eliminate the variable that creates the smallest next factor).
+</div>
+
+<div class="example-box">
+  <div class="ex-title">Ordering Effect — Naive Bayes Network</div>
+  <p>Network: Z → {X₁,...,Xₙ} → {Y₁,...,Yₙ} (common cause with multiple effects and children)</p>
+  <p><strong>Order 1:</strong> Eliminate Z, X₁, ..., Xₙ₋₁ first</p>
+  <p>Creates a factor of size 2^(n+1) — exponential!</p>
+  <p><strong>Order 2:</strong> Eliminate Xᵢ then Yᵢ together for each i</p>
+  <p>Each factor stays size 2² — polynomial!</p>
+  <div class="formula-box" style="margin:10px 0">
+    Order 2 insight: P(X₁|Z) × P(Y₁|X₁) = P(X₁,Y₁,Z) → sum out X₁ → P(Y₁,Z)
+    Each pair creates factor of size only 4!
+  </div>
+</div>
+
+<h3 class="sub-title">13.3.3 Complexity of Exact Inference</h3>
+
+<div class="table-wrap"><table>
+  <tr><th>Network Type</th><th>Complexity</th><th>Notes</th></tr>
+  <tr><td>Singly connected / Polytree (at most one undirected path between any two nodes)</td><td>Linear in network size</td><td>Very efficient!</td></tr>
+  <tr><td>Multiply connected networks</td><td>NP-hard in general</td><td>May be exponential</td></tr>
+  <tr><td>General case</td><td>#P-hard</td><td>Strictly harder than NP-complete</td></tr>
+</table></div>
+
+<div class="callout callout-warn">
+  <strong>NP-hardness proof:</strong> Bayesian network inference can encode 3-SAT. If P(Z=true) > 0, the formula is satisfiable. Since 3-SAT is NP-hard, BN inference is NP-hard. In fact it's #P-hard — even counting the number of satisfying assignments is hard.
+</div>
+
+<h3 class="sub-title">13.3.4 Clustering (Join Tree) Algorithms</h3>
+
+<p>For computing posterior probabilities of ALL variables, variable elimination would require O(n) queries at O(n) each = O(n²). <strong>Clustering algorithms</strong> combine individual nodes into cluster nodes forming a polytree, then do message-passing, achieving O(n) total time.</p>
+
+<div class="example-box">
+  <div class="ex-title">Clustering Example — Sprinkler Network (Figure 13.15)</div>
+  <p>The network Cloudy → {Sprinkler, Rain} → WetGrass is multiply connected (Rain and Sprinkler both affect WetGrass, and both are affected by Cloudy).</p>
+  <p>Solution: merge Sprinkler and Rain into one "meganode" Sprinkler+Rain with 4 values: {TT, TF, FT, FF}. Now the network is a polytree and message-passing is efficient.</p>
+</div>
+
+<!-- ───── Approximate Inference ───── -->
+<h2 id="approx" class="section-title">13.4 Approximate Inference — Monte Carlo Methods</h2>
+
+<p>When exact inference is intractable, we use <strong>randomized sampling (Monte Carlo) algorithms</strong> to get approximate answers. The idea: generate random samples from the distribution and count outcomes to estimate probabilities.</p>
+
+<h3 class="sub-title">13.4.1 Direct Sampling — Prior Sampling</h3>
+
+<p>The simplest approach: generate complete events by sampling each variable in <em>topological order</em>, conditioned on the values already sampled for its parents.</p>
+
+<div class="example-box">
+  <div class="ex-title">Prior Sampling — Sprinkler Network</div>
+  <p>Variables in order: Cloudy, Sprinkler, Rain, WetGrass</p>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body">Sample from P(Cloudy) = ⟨0.5, 0.5⟩ → get <strong>true</strong></div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">Sample from P(Sprinkler | Cloudy=true) = ⟨0.1, 0.9⟩ → get <strong>false</strong></div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">Sample from P(Rain | Cloudy=true) = ⟨0.8, 0.2⟩ → get <strong>true</strong></div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">Sample from P(WetGrass | Sprinkler=F, Rain=T) = ⟨0.9, 0.1⟩ → get <strong>true</strong></div></div>
+  </div>
+  <p>Result: event = [true, false, true, true] with probability 0.5×0.9×0.8×0.9 = <strong>0.324</strong></p>
+  <p>This process generates samples exactly according to the prior distribution. Generate many samples and count to estimate any probability.</p>
+</div>
+
+<h3 class="sub-title">Rejection Sampling</h3>
+
+<p>To answer conditional queries P(X | e): generate prior samples, <strong>reject</strong> (discard) any sample that doesn't match the evidence, count the rest.</p>
+
+<div class="formula-box">
+  <span class="label">Rejection Sampling</span>
+  for j = 1 to N:
+    x ← PRIOR-SAMPLE(bn)
+    if x matches evidence e:
+      count x[query]
+  
+  P(X | e) ≈ (count of X values among kept samples) / (total kept)
+</div>
+
+<div class="callout callout-warn">
+  <strong>Problem:</strong> If evidence is rare, most samples are rejected! The fraction accepted = P(evidence). For P(e) = 0.001, we reject 99.9% of samples — extremely slow convergence. Rejection sampling is essentially useless when evidence has low probability.
+</div>
+
+<h3 class="sub-title">Likelihood Weighting (Importance Sampling)</h3>
+
+<p>Instead of rejecting samples, <strong>weight them</strong> by how well they match the evidence. This uses all generated samples.</p>
+
+<div class="steps">
+  <div class="step"><div class="step-num"></div><div class="step-body"><strong>Fix evidence variables</strong> to their observed values (don't sample them).</div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body"><strong>Sample non-evidence variables</strong> in topological order, conditioned on parents (which may include fixed evidence variables).</div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body"><strong>Compute weight</strong> = product of P(evidence variable = observed value | its parents) for all evidence variables.</div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body"><strong>Accumulate weighted counts</strong> for the query variable, then normalize.</div></div>
+</div>
+
+<div class="formula-box">
+  <span class="label">Likelihood Weighting Formula</span>
+  Weight w = ∏ᵢ P(eᵢ | parents(Eᵢ))
+  <span class="comment">-- Product over evidence variables Eᵢ of their CPT entries</span>
+  <span class="comment">-- Each sample x gets weight w(x)</span>
+  
+  P̂(X=x | e) = Σ_{samples with X=x} w(sample) / Σ_{all samples} w(sample)
+</div>
+
+<div class="example-box">
+  <div class="ex-title">Likelihood Weighting Example — Sprinkler Network</div>
+  <p><strong>Query:</strong> P(Rain | Cloudy=true, WetGrass=true)</p>
+  <p>Order: Cloudy (evidence), Sprinkler, Rain, WetGrass (evidence)</p>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body">Cloudy is evidence=true. w ← 1.0 × P(Cloudy=T) = 0.5</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">Sample Sprinkler from P(Sprinkler|Cloudy=T)=⟨0.1,0.9⟩ → get false</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">Sample Rain from P(Rain|Cloudy=T)=⟨0.8,0.2⟩ → get true</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">WetGrass is evidence=true. w ← 0.5 × P(WetGrass=T|Sprinkler=F,Rain=T) = 0.5 × 0.9 = <strong>0.45</strong></div></div>
+  </div>
+  <p>Sample: [true, false, true, true], weight = 0.45. Count under Rain=true.</p>
+</div>
+
+<div class="callout callout-teal">
+  <strong>Advantage over rejection sampling:</strong> Uses ALL samples, not just those matching evidence. Works better when evidence is downstream (early in topological order) so that samples are guided toward relevant regions.
+  <br><br>
+  <strong>Limitation:</strong> Pays less attention to downstream evidence. Samples generated before the evidence node don't "know" what the evidence will be, so many will have very low weights. This is like simulating randomly and then correcting after the fact.
+</div>
+
+<h3 class="sub-title">13.4.2 Markov Chain Monte Carlo (MCMC) — Gibbs Sampling</h3>
+
+<p>MCMC algorithms don't generate each sample from scratch. Instead, they maintain a current state and <em>make small random changes</em> to it, generating a sequence of correlated samples.</p>
+
+<div class="def-box">
+  <div class="def-label">Gibbs Sampling Algorithm</div>
+  <p>Start with a random assignment (evidence variables fixed). Repeatedly pick a non-evidence variable and resample it from its conditional distribution given the current values of its Markov blanket. Count each state visited as a sample.</p>
+</div>
+
+<div class="formula-box">
+  <span class="label">Gibbs Sampling — Markov Blanket Sampling</span>
+  P(xᵢ | mb(Xᵢ)) = α P(xᵢ | parents(Xᵢ)) × ∏_{Yⱼ ∈ Children(Xᵢ)} P(yⱼ | parents(Yⱼ))
+
+  <span class="comment">-- Only need to look at local neighborhood!</span>
+  <span class="comment">-- Work per step is independent of network size</span>
+</div>
+
+<div class="example-box">
+  <div class="ex-title">Gibbs Sampling — Sprinkler Network</div>
+  <p><strong>Query:</strong> P(Rain | Sprinkler=true, WetGrass=true)</p>
+  <p>Non-evidence variables: Cloudy, Rain. Initialize randomly: [true, true, false, true] (bold = evidence fixed)</p>
+  
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Iteration 1:</strong> Choose Cloudy. Sample from P(Cloudy | Sprinkler=T, Rain=F) using Markov blanket formula. Suppose result: Cloudy=false. State: [<strong>false</strong>, T, F, T]</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Iteration 2:</strong> Choose Rain. Sample from P(Rain | Cloudy=F, Sprinkler=T, WetGrass=T). Suppose result: Rain=true. State: [F, T, <strong>T</strong>, T]</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">Continue... Each state is a sample. Count states where Rain=true.</div></div>
+  </div>
+
+  <h4>Computing P(Cloudy | Sprinkler=T, Rain=F):</h4>
+  <div class="formula-box" style="margin:10px 0">
+    P(c | s=T, r=F) = α P(c)×P(s=T|c)×P(r=F|c)
+                    = α × 0.5 × 0.1 × 0.2 = α × 0.01
+    P(¬c | s=T, r=F) = α P(¬c)×P(s=T|¬c)×P(r=F|¬c)
+                     = α × 0.5 × 0.5 × 0.8 = α × 0.20
+    
+    Normalized: P(c|s,¬r) ≈ 0.048, P(¬c|s,¬r) ≈ 0.952
+  </div>
+</div>
+
+<h4 class="micro-title">Why Gibbs Sampling Works — Theoretical Justification</h4>
+
+<p>The sequence of states generated by Gibbs sampling forms a <strong>Markov chain</strong>. Key concepts:</p>
+
+<div class="table-wrap"><table>
+  <tr><th>Concept</th><th>Meaning</th></tr>
+  <tr><td>Transition Kernel k(x→x')</td><td>Probability of moving from state x to state x'</td></tr>
+  <tr><td>Stationary Distribution π</td><td>Distribution that doesn't change under transitions: π(x') = Σ_x π(x)k(x→x')</td></tr>
+  <tr><td>Detailed Balance</td><td>π(x)k(x→x') = π(x')k(x'→x) — implies stationarity</td></tr>
+  <tr><td>Ergodicity</td><td>Every state is reachable from every other state, no periodic cycles</td></tr>
+</table></div>
+
+<div class="callout callout-teal">
+  <strong>Key theorem:</strong> Gibbs sampling satisfies detailed balance with π(x) = P(x|e) — the true posterior. Therefore, if the chain is ergodic (no zero-probability CPT entries to block transitions), samples eventually converge to the correct posterior distribution.
+</div>
+
+<div class="callout callout-warn">
+  <strong>When Gibbs sampling fails:</strong> If CPTs have 0/1 probabilities (deterministic relationships), ergodicity breaks. For example, if Rain is always the same as Cloudy, the chain gets stuck and never explores the other possibility.
+</div>
+
+<h3 class="sub-title">Metropolis-Hastings (MH) Sampling</h3>
+
+<p>A more general MCMC algorithm that overcomes limitations of Gibbs sampling.</p>
+
+<div class="steps">
+  <div class="step"><div class="step-num"></div><div class="step-body"><strong>Propose</strong> a new state x' from a proposal distribution q(x'|x).</div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body"><strong>Accept or reject</strong> with probability: a(x'|x) = min(1, π(x')q(x|x') / π(x)q(x'|x))</div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body">If rejected, stay at current state x.</div></div>
+</div>
+
+<div class="callout callout-teal">
+  <strong>Remarkable property:</strong> MH converges to the correct stationary distribution for ANY ergodic proposal distribution — guaranteed by the detailed balance condition. Freedom to design clever proposal distributions allows escaping regions where Gibbs gets stuck.
+</div>
+
+<!-- ───── D-Separation ───── -->
+<h2 id="dsep" class="section-title">Independence in Bayes Nets — D-Separation</h2>
+
+<p>Given a Bayes net, we can determine whether any two variables are conditionally independent by analyzing the graph structure.</p>
+
+<h3 class="sub-title">Three Canonical Patterns (Triples)</h3>
+
+<div class="table-wrap"><table>
+  <tr><th>Pattern</th><th>Structure</th><th>Independent (given nothing)?</th><th>Independent given middle node?</th></tr>
+  <tr><td><strong>Causal Chain</strong></td><td>X → Y → Z</td><td>No (X can influence Z through Y)</td><td><strong>Yes!</strong> Knowing Y blocks the path</td></tr>
+  <tr><td><strong>Common Cause</strong></td><td>X ← Y → Z</td><td>No (shared cause correlates X and Z)</td><td><strong>Yes!</strong> Knowing Y blocks the path</td></tr>
+  <tr><td><strong>Common Effect (V-structure)</strong></td><td>X → Y ← Z</td><td><strong>Yes!</strong> X and Z are independent</td><td><strong>No!</strong> Knowing Y activates the path</td></tr>
+</table></div>
+
+<div class="example-box">
+  <div class="ex-title">Causal Chain — Low Pressure → Rain → Traffic</div>
+  <p><strong>Without knowing Rain:</strong> Low pressure and Traffic are correlated. Low pressure → rain → traffic, so they're not independent.</p>
+  <p><strong>Given Rain:</strong> If I know it's raining, then whether there was low pressure tells me nothing extra about traffic. Rain "screens off" the upstream cause from the downstream effect.</p>
+  <p><em>From slides:</em> "If I know that it is raining, and there is traffic, I don't need to know whether there is low pressure to understand the traffic."</p>
+</div>
+
+<div class="example-box">
+  <div class="ex-title">Common Cause — Project Due → {Forums Busy, Lab Full}</div>
+  <p><strong>Without knowing if project is due:</strong> If forums are busy, that suggests a project might be due, which increases probability lab is full. They're correlated.</p>
+  <p><strong>Given project is due:</strong> Once I know the project deadline is the cause, whether forums are busy or lab is full no longer affects my belief about the other. The common cause "explains" their correlation.</p>
+</div>
+
+<div class="example-box">
+  <div class="ex-title">Common Effect (V-structure) — Rain, Ballgame → Traffic</div>
+  <p><strong>Without knowing Traffic:</strong> Rain and Ballgame are independent. They're unrelated — knowing one tells nothing about the other.</p>
+  <p><strong>Given Traffic = true:</strong> Now they become dependent! "Explaining away" — if I know there's traffic and I also know it's raining (explains the traffic), the probability of a ballgame goes down. They compete as explanations.</p>
+  <p>This is <strong>backwards</strong> from causal chains and common causes — observing the effect <em>activates</em> dependence between causes!</p>
+</div>
+
+<h3 class="sub-title">D-Separation Algorithm</h3>
+
+<div class="def-box">
+  <div class="def-label">D-Separation (Directional Separation)</div>
+  <p>Variables X and Y are <strong>d-separated</strong> by a set Z if all undirected paths between X and Y are "blocked" by Z. If d-separated, then X ⊥ Y | Z (they are conditionally independent given Z).</p>
+</div>
+
+<h4 class="micro-title">Active vs. Inactive Triples</h4>
+
+<p>A path is <strong>active</strong> if every triple on the path is active. A path is <strong>blocked</strong> if any triple is inactive. All inactive paths → d-separated → conditionally independent.</p>
+
+<div class="table-wrap"><table>
+  <tr><th>Triple Type</th><th>Active (path continues) when...</th><th>Blocked (path stops) when...</th></tr>
+  <tr><td>Causal Chain A→B→C</td><td>B is NOT observed</td><td>B IS observed (evidence shades B)</td></tr>
+  <tr><td>Common Cause A←B→C</td><td>B is NOT observed</td><td>B IS observed</td></tr>
+  <tr><td>V-structure A→B←C</td><td>B OR any descendant of B IS observed</td><td>B and all descendants are NOT observed</td></tr>
+</table></div>
+
+<div class="example-box">
+  <div class="ex-title">D-Separation Example — Traffic Network</div>
+  <p>Network: Low Pressure → Rain; Rain → Traffic; Ballgame → Traffic; Traffic → Traffic Report</p>
+  <p><strong>Are Rain and Ballgame d-separated given Traffic Report?</strong></p>
+  <p>Path: Rain → Traffic ← Ballgame (v-structure at Traffic)</p>
+  <p>Traffic Report is a descendant of Traffic. So observing Traffic Report "activates" the v-structure at Traffic.</p>
+  <p>→ Path is ACTIVE → Rain and Ballgame are <strong>NOT</strong> d-separated given Traffic Report.</p>
+  <p>→ They are <strong>dependent</strong> given Traffic Report (makes sense: knowing traffic situation and traffic report gives us info about both rain and ballgame).</p>
+</div>
+
+<h4 class="micro-title">Complete D-Separation Procedure</h4>
+<div class="steps">
+  <div class="step"><div class="step-num"></div><div class="step-body">Consider ALL undirected paths between X and Y (ignoring arrow directions).</div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body">For each path, check every triple. Is the triple active or inactive given evidence Z?</div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body">A path is active iff ALL its triples are active. A path is blocked iff ANY triple is inactive.</div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body">If ALL paths from X to Y are blocked → X and Y are d-separated → X ⊥ Y | Z.</div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body">If ANY path is active → independence is NOT guaranteed.</div></div>
+</div>
+
+<!-- ───── Causal Networks ───── -->
+<h2 id="causal" class="section-title">13.5 Causal Networks</h2>
+
+<p>A regular Bayesian network encodes probabilistic dependencies but doesn't distinguish correlation from causation. <strong>Causal Networks</strong> (also called Structural Causal Models) go further by encoding actual cause-effect relationships.</p>
+
+<h3 class="sub-title">Observational vs. Interventional Distributions</h3>
+
+<div class="callout callout-teal">
+  <strong>Key distinction:</strong> In standard probability, P(Y | X=x) means "given that we observe X=x, what is Y?" In causal networks, P(Y | do(X=x)) means "if we forcibly SET X=x (intervene), what is Y?" These can be very different!
+</div>
+
+<div class="example-box">
+  <div class="ex-title">Sprinkler Example — do vs. observe</div>
+  <p>In the Sprinkler network: Cloudy → Sprinkler; Cloudy → Rain; Sprinkler,Rain → WetGrass</p>
+  
+  <p><strong>Observing Sprinkler=true:</strong></p>
+  <p>P(Cloudy | Sprinkler=T) — seeing sprinkler is on suggests it's probably cloudy (since cloudy weather makes people less likely to turn on sprinkler, so observing sprinkler on when cloudy is LESS common). Actually from the CPT, when Cloudy sprinkler probability is lower, so sprinkler=T is evidence against Cloudy.</p>
+  
+  <p><strong>Intervening do(Sprinkler=true):</strong></p>
+  <p>P(Cloudy | do(Sprinkler=T)) = P(Cloudy) — forcing sprinkler on from outside the system tells us NOTHING about the weather! We've broken the causal link from Cloudy to Sprinkler.</p>
+</div>
+
+<h3 class="sub-title">The Do-Operator and Mutilated Networks</h3>
+
+<div class="steps">
+  <div class="step"><div class="step-num"></div><div class="step-body"><strong>Notation:</strong> do(X=x) means "force variable X to take value x through external intervention".</div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body"><strong>Effect on network:</strong> Remove all arrows INTO the intervened variable. It no longer depends on its normal parents — we've overridden the natural mechanism.</div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body"><strong>Compute:</strong> Run inference on this "mutilated" network.</div></div>
+</div>
+
+<div class="formula-box">
+  <span class="label">Do-Operator Formula (Adjustment Formula)</span>
+  P(Xᵢ | do(Xⱼ=x)) = Σ_{parents(Xⱼ)} P(xᵢ | xⱼ, parents(Xⱼ)) × P(parents(Xⱼ))
+  
+  <span class="comment">-- Weight the effect by the prior on Xⱼ's parents</span>
+  <span class="comment">-- "What would happen across all possible contexts?"</span>
+</div>
+
+<h3 class="sub-title">Back-Door Criterion</h3>
+
+<p>To determine the causal effect of X on Y, we need to "close the back door" — block all non-causal paths (confounding paths). If we can find a set Z that closes the back door (d-separates X from its parents given X and Z), then:</p>
+
+<div class="formula-box">
+  <span class="label">Back-Door Adjustment Formula</span>
+  P(Y | do(X=x)) = Σ_z P(Y | X=x, Z=z) × P(Z=z)
+  
+  <span class="comment">-- Z must block all back-door paths (non-causal confounding paths)</span>
+  <span class="comment">-- Key to establishing causation from observational data!</span>
+</div>
+
+<!-- ───── Slides Extra Content ───── -->
+<h2 id="slides-extra" class="section-title">Extra Topics From Slides</h2>
+
+<h3 class="sub-title">Variable Elimination in Slides — Traffic Domain Step-by-Step</h3>
+
+<p>The slides show VE on a 3-variable network: R (Raining) → T (Traffic) → L (Late for class).</p>
+
+<div class="table-wrap"><table>
+  <tr><th>Variable</th><th>CPT Values</th></tr>
+  <tr><td>P(R)</td><td>P(+r)=0.1, P(-r)=0.9</td></tr>
+  <tr><td>P(T|R)</td><td>P(+t|+r)=0.8, P(-t|+r)=0.2, P(+t|-r)=0.1, P(-t|-r)=0.9</td></tr>
+  <tr><td>P(L|T)</td><td>P(+l|+t)=0.3, P(-l|+t)=0.7, P(+l|-t)=0.1, P(-l|-t)=0.9</td></tr>
+</table></div>
+
+<div class="example-box">
+  <div class="ex-title">Inference by Enumeration vs Variable Elimination — Same Answer, Different Efficiency</div>
+  <h4>Query: P(L | +r)</h4>
+  
+  <p><strong>Enumeration approach:</strong> Join all factors into one big joint, then sum out T, then normalize.</p>
+  <div class="formula-box" style="margin:10px 0">
+    P(R,T,L): Full joint table (8 entries for 3 binary variables)
+    Select rows where R=+r (4 entries)
+    Sum out T (2 entries: P(+l|+r) and P(-l|+r))
+    Normalize → P(L|+r)
+  </div>
+
+  <p><strong>Variable Elimination approach:</strong> Process factors left-to-right</p>
+  <div class="formula-box" style="margin:10px 0">
+    Start with: f_R(+r)=0.1, f_T(R,T) (4 entries), f_L(T,L) restricted to +l
+    
+    Join R and T:
+    f_{RT}(T) = f_R(+r) × f_T(+r, T)
+    f_{RT}(+t) = 0.1 × 0.8 = 0.08
+    f_{RT}(-t) = 0.1 × 0.2 = 0.02
+    
+    Join with L factor (evidence already fixed to +l):
+    f_{TL}(T, +l) = f_L(T, +l):  +t→0.3,  -t→0.1
+    
+    Join: f(T) = f_{RT}(T) × f_{TL}(T,+l):
+    f(+t) = 0.08 × 0.3 = 0.024
+    f(-t) = 0.02 × 0.1 = 0.002
+    
+    Eliminate T (sum out):
+    f() = 0.024 + 0.002 = 0.026
+    
+    Similarly for -l: gives 0.074
+    
+    P(L|+r) = Normalize(⟨0.026, 0.074⟩) = ⟨0.26, 0.74⟩
+  </div>
+</div>
+
+<h3 class="sub-title">Inference by Enumeration — The Procedural Outline (Slides)</h3>
+
+<p>The slides define "factors" as the working objects in VE:</p>
+
+<div class="steps">
+  <div class="step"><div class="step-num"></div><div class="step-body"><strong>Initial factors:</strong> One per node, from local CPTs. For observed evidence variables, select only the row matching the evidence value.</div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body"><strong>Operation 1 — JOIN:</strong> Combine factors by multiplying entries where variables match (pointwise product). This is like a database join.</div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body"><strong>Operation 2 — ELIMINATE:</strong> Sum out a variable from a factor (marginalization). Produces a smaller factor with that variable removed.</div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body"><strong>Finish:</strong> Normalize the remaining factor.</div></div>
+</div>
+
+<h3 class="sub-title">Why Variable Elimination is Better — The Key Algebraic Trick</h3>
+
+<p>The slides show this is fundamentally about exploiting distributive law:</p>
+
+<div class="formula-box">
+  <span class="label">Algebraic Insight</span>
+  Naïve: uwy + uwz + uxy + uxz + vwy + vwz + vxy + vxz
+  
+  Factored: (u+v)(w+x)(y+z)
+  
+  <span class="comment">-- Same result, massively fewer multiplications!</span>
+  <span class="comment">-- This is what VE exploits: don't multiply everything together first</span>
+  <span class="comment">-- Factor out terms that don't depend on the variable being summed</span>
+</div>
+
+<h3 class="sub-title">Worst-Case Complexity and Polytrees (Slides)</h3>
+
+<div class="callout callout-warn">
+  <strong>NP-hardness via SAT reduction (from slides):</strong>
+  If we can compute P(Z = 0 or not), we can answer 3-SAT. Each Boolean clause becomes a CPT entry. Each propositional variable becomes a root node with P=0.5. The conjunction S is true iff ALL clauses are satisfied. So P(S=true) = (number of satisfying assignments) / 2^n. If P(S=true) = 0, unsatisfiable; else satisfiable.
+</div>
+
+<div class="def-box">
+  <div class="def-label">Polytree</div>
+  <p>A directed graph where there is at most ONE undirected path between any two nodes. For polytrees, exact inference is always efficient (linear time). You can always find a good variable ordering.</p>
+</div>
+
+<h3 class="sub-title">Bayes Net Summary — From Slides</h3>
+
+<div class="diagram-area">
+  <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg">
+    <!-- Strict Independence -->
+    <rect x="10" y="10" width="130" height="180" rx="6" fill="#e8f6f5" stroke="#0f7b72" stroke-width="1.5"/>
+    <text x="75" y="35" font-family="serif" font-size="12" text-anchor="middle" font-weight="bold" fill="#0d1b2a">Strict</text>
+    <text x="75" y="52" font-family="serif" font-size="12" text-anchor="middle" font-weight="bold" fill="#0d1b2a">Independence</text>
+    <circle cx="55" cy="90" r="18" fill="#0f7b72"/>
+    <text x="55" y="95" font-family="serif" font-size="11" text-anchor="middle" fill="white">A</text>
+    <circle cx="95" cy="90" r="18" fill="#0f7b72"/>
+    <text x="95" y="95" font-family="serif" font-size="11" text-anchor="middle" fill="white">B</text>
+    <text x="75" y="160" font-family="monospace" font-size="9" text-anchor="middle" fill="#5a6070">P(A,B)=P(A)P(B)</text>
+
+    <!-- Naive Bayes -->
+    <rect x="155" y="10" width="130" height="180" rx="6" fill="#fff4e5" stroke="#c9933a" stroke-width="1.5"/>
+    <text x="220" y="35" font-family="serif" font-size="12" text-anchor="middle" font-weight="bold" fill="#0d1b2a">Naive Bayes</text>
+    <circle cx="220" cy="70" r="18" fill="#c9933a"/>
+    <text x="220" y="75" font-family="serif" font-size="11" text-anchor="middle" fill="white">C</text>
+    <circle cx="180" cy="120" r="16" fill="#1b2d45"/>
+    <text x="180" y="125" font-family="serif" font-size="11" text-anchor="middle" fill="white">D</text>
+    <circle cx="220" cy="120" r="16" fill="#1b2d45"/>
+    <text x="220" y="125" font-family="serif" font-size="11" text-anchor="middle" fill="white">E</text>
+    <circle cx="260" cy="120" r="16" fill="#1b2d45"/>
+    <text x="260" y="125" font-family="serif" font-size="11" text-anchor="middle" fill="white">F</text>
+    <line x1="210" y1="87" x2="192" y2="104" stroke="#0f7b72" stroke-width="1.5"/>
+    <line x1="220" y1="88" x2="220" y2="104" stroke="#0f7b72" stroke-width="1.5"/>
+    <line x1="230" y1="87" x2="248" y2="104" stroke="#0f7b72" stroke-width="1.5"/>
+
+    <!-- Sparse Bayes Net -->
+    <rect x="300" y="10" width="130" height="180" rx="6" fill="#f5f0e8" stroke="#1b2d45" stroke-width="1.5"/>
+    <text x="365" y="35" font-family="serif" font-size="12" text-anchor="middle" font-weight="bold" fill="#0d1b2a">Sparse</text>
+    <text x="365" y="52" font-family="serif" font-size="12" text-anchor="middle" font-weight="bold" fill="#0d1b2a">Bayes Net</text>
+    <circle cx="340" cy="80" r="16" fill="#e84c4c"/>
+    <text x="340" y="85" font-family="serif" font-size="10" text-anchor="middle" fill="white">A</text>
+    <circle cx="390" cy="80" r="16" fill="#e84c4c"/>
+    <text x="390" y="85" font-family="serif" font-size="10" text-anchor="middle" fill="white">B</text>
+    <circle cx="365" cy="130" r="16" fill="#1b2d45"/>
+    <text x="365" y="135" font-family="serif" font-size="10" text-anchor="middle" fill="white">C</text>
+    <line x1="349" y1="95" x2="357" y2="114" stroke="#0f7b72" stroke-width="1.5"/>
+    <line x1="381" y1="95" x2="373" y2="114" stroke="#0f7b72" stroke-width="1.5"/>
+    <text x="365" y="175" font-family="monospace" font-size="9" text-anchor="middle" fill="#5a6070">selective dependencies</text>
+
+    <!-- Full Joint -->
+    <rect x="445" y="10" width="140" height="180" rx="6" fill="#fff0f0" stroke="#e84c4c" stroke-width="1.5"/>
+    <text x="515" y="35" font-family="serif" font-size="12" text-anchor="middle" font-weight="bold" fill="#0d1b2a">Full Joint</text>
+    <text x="515" y="52" font-family="serif" font-size="12" text-anchor="middle" font-weight="bold" fill="#0d1b2a">Distribution</text>
+    <text x="515" y="100" font-family="monospace" font-size="10" text-anchor="middle" fill="#e84c4c">All variables</text>
+    <text x="515" y="118" font-family="monospace" font-size="10" text-anchor="middle" fill="#e84c4c">connected to all</text>
+    <text x="515" y="140" font-family="monospace" font-size="9" text-anchor="middle" fill="#5a6070">2ⁿ entries</text>
+    <text x="515" y="160" font-family="monospace" font-size="9" text-anchor="middle" fill="#5a6070">most expensive</text>
+  </svg>
+  <p style="font-size:13px; color:#5a6070; margin-top:8px;">The spectrum from strict independence (most compact, least expressive) to full joint (most expressive, most expensive). Bayes Nets allow flexible tradeoff.</p>
+</div>
+
+<!-- ══════ SUMMARY ══════ -->
+<div id="summary" class="chapter-divider" style="margin-top:60px;">
+  <div class="chapter-num" style="font-size:36px; min-width:50px;">∑</div>
+  <div class="chapter-info">
+    <h2>Complete Summary — Key Formulas &amp; Results</h2>
+    <p>All the essential equations and concepts you need for exams.</p>
+  </div>
+</div>
+
+<h3 class="sub-title">Chapter 12 — Key Formulas</h3>
+
+<div class="formula-box">
+  <span class="label">All Essential Formulas — Chapter 12</span>
+  <span class="hi">1. CONDITIONAL PROBABILITY</span>
+     P(a | b) = P(a ∧ b) / P(b)
+
+  <span class="hi">2. PRODUCT RULE</span>
+     P(a ∧ b) = P(a | b) × P(b)
+
+  <span class="hi">3. CHAIN RULE</span>
+     P(x₁,...,xₙ) = ∏ᵢ P(xᵢ | xᵢ₋₁,...,x₁)
+
+  <span class="hi">4. MARGINALIZATION</span>
+     P(Y) = Σ_z P(Y, z)
+
+  <span class="hi">5. CONDITIONING</span>
+     P(Y) = Σ_z P(Y | z) P(z)
+
+  <span class="hi">6. INDEPENDENCE</span>
+     X ⊥ Y iff P(X,Y) = P(X)P(Y)
+
+  <span class="hi">7. BAYES' RULE</span>
+     P(b|a) = P(a|b) P(b) / P(a)
+
+  <span class="hi">8. CONDITIONAL INDEPENDENCE</span>
+     X ⊥ Y | Z iff P(X,Y|Z) = P(X|Z)P(Y|Z)
+
+  <span class="hi">9. NAIVE BAYES</span>
+     P(C, E₁,...,Eₙ) = P(C) × ∏ᵢ P(Eᵢ | C)
+
+  <span class="hi">10. INFERENCE BY ENUMERATION</span>
+     P(X|e) = α Σ_y P(X, e, y)
+</div>
+
+<h3 class="sub-title">Chapter 13 — Key Formulas</h3>
+
+<div class="formula-box">
+  <span class="label">All Essential Formulas — Chapter 13</span>
+  <span class="hi">1. BAYES NET JOINT DISTRIBUTION</span>
+     P(x₁,...,xₙ) = ∏ᵢ P(xᵢ | parents(Xᵢ))
+
+  <span class="hi">2. NOISY-OR</span>
+     P(¬child | parents) = ∏_{j: Xⱼ=T} qⱼ
+
+  <span class="hi">3. MARKOV BLANKET SAMPLING (Gibbs)</span>
+     P(xᵢ | mb(Xᵢ)) = α P(xᵢ|parents) × ∏_{children} P(child|parents)
+
+  <span class="hi">4. DO-OPERATOR / ADJUSTMENT FORMULA</span>
+     P(Xᵢ | do(Xⱼ=x)) = Σ_{pa} P(xᵢ|xⱼ, pa) P(pa)
+
+  <span class="hi">5. LIKELIHOOD WEIGHTING</span>
+     w(sample) = ∏_{evidence vars e} P(e | parents(E))
+
+  <span class="hi">6. D-SEPARATION RULE</span>
+     X ⊥ Y | Z if all paths from X to Y are blocked by Z
+     (Blocked path: causal chain or common cause with Z node observed,
+      OR v-structure with neither Z node nor its descendants observed)
+</div>
+
+<h3 class="sub-title">Complexity Summary</h3>
+
+<div class="table-wrap"><table>
+  <tr><th>Algorithm</th><th>Time</th><th>Space</th><th>Exact?</th><th>Best for</th></tr>
+  <tr><td>Inference by Enumeration</td><td>O(n·2ⁿ)</td><td>O(2ⁿ)</td><td>Yes</td><td>Small networks only</td></tr>
+  <tr><td>Variable Elimination</td><td>O(n·2^k)</td><td>O(2^k)</td><td>Yes</td><td>Polytrees, sparse nets</td></tr>
+  <tr><td>Clustering (Join Tree)</td><td>O(n) for polytrees</td><td>O(2^k)</td><td>Yes</td><td>Multiple queries</td></tr>
+  <tr><td>Rejection Sampling</td><td>O(N/P(e))</td><td>O(n)</td><td>No</td><td>Common evidence</td></tr>
+  <tr><td>Likelihood Weighting</td><td>O(N)</td><td>O(n)</td><td>No</td><td>Upstream evidence</td></tr>
+  <tr><td>Gibbs Sampling (MCMC)</td><td>O(N·k)</td><td>O(n)</td><td>No</td><td>Large networks, any evidence</td></tr>
+</table></div>
+
+<div class="callout callout-teal" style="margin-top:32px">
+  <strong>Final Key Insight:</strong> Bayesian networks play the same role in probabilistic reasoning that propositional logic plays in deterministic reasoning. They are a systematic, principled, and compact way to represent and reason about uncertain knowledge. The choice between exact and approximate inference depends on the size and structure of the network and the required precision of the answer.
+</div>
+
+</div><!-- end wrapper -->
+
+<footer style="background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padding:24px;font-family:'JetBrains Mono',monospace;font-size:12px;">
+  AI 2002 · Study Guide · Chapters 12 &amp; 13 · Based on AIMA 4th Ed. by Russell &amp; Norvig · Spring 2026
+</footer>
+
+</body>
+</html>
